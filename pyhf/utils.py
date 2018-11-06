@@ -42,6 +42,38 @@ def validate(spec, schema):
 
 
 def loglambdav(pars, data, pdf):
+    r"""
+    Two times the negative log-likelihood of the model parameters, :math:`\left(\mu, \boldsymbol{\theta}\right)`, given the observed data
+
+    .. math::
+
+        -2\ln L\left(\mu, \boldsymbol{\theta}\right)
+
+    It is used in the calculation of the test statistic, :math:`t_{\mu}`, as defiend in Equation (8) in `arXiv:1007.1727`_
+
+    .. _`arXiv:1007.1727`: https://arxiv.org/abs/1007.1727
+
+    .. math::
+
+       t_{\mu} = -2\ln\lambda\left(\mu\right)
+
+    where :math:`\lambda\left(\mu\right)` is the profile likelihood ratio as defined in Equation (7)
+
+    .. math::
+
+       \lambda\left(\mu\right) = \frac{L\left(\mu, \hat{\hat{\boldsymbol{\theta}}}\right)}{L\left(\hat{\mu}, \hat{\boldsymbol{\theta}}\right)}
+
+    Args:
+        pars (Tensor): The parameters of the HistFactory model
+        data (Tensor): The data to be considered
+        pdf (|pyhf.pdf.Model|_): The HistFactory statistical model used in the likelihood ratio calculation
+
+    .. |pyhf.pdf.Model| replace:: ``pyhf.pdf.Model``
+    .. _pyhf.pdf.Model: https://diana-hep.org/pyhf/_generated/pyhf.pdf.Model.html
+
+    Returns:
+        Float: Two times the negative log-likelihood, :math:`-2\ln L\left(\mu, \boldsymbol{\theta}\right)`
+    """
     return -2 * pdf.logpdf(pars, data)
 
 
