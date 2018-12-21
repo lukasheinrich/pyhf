@@ -10,6 +10,13 @@ class _BackendRetriever(object):
             # for autocomplete and dir() calls
             self.numpy_backend = numpy_backend
             return numpy_backend
+        elif name == 'jax_backend':
+            from .jax_backend import jax_backend
+
+            assert jax_backend
+            # for autocomplete and dir() calls
+            self.jax_backend = jax_backend
+            return jax_backend
         elif name == 'pytorch_backend':
             try:
                 from .pytorch_backend import pytorch_backend
