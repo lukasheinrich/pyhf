@@ -1,0 +1,447 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>pyhf.utils &mdash; pyhf 0.0.15 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/github-fork-ribbon-css/0.2.2/gh-fork-ribbon.min.css" type="text/css" />
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+
+  
+  <script src="../../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../../index.html" class="icon icon-home"> pyhf
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.0.15
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../examples.html">Examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../talks.html">Talks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../development.html">Developing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../faq.html">FAQ</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../api.html">API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../citations.html">Use and Citations</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">pyhf</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../index.html">Module code</a> &raquo;</li>
+        
+          <li><a href="../pyhf.html">pyhf</a> &raquo;</li>
+        
+      <li>pyhf.utils</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for pyhf.utils</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">json</span>
+<span class="kn">import</span> <span class="nn">jsonschema</span>
+<span class="kn">import</span> <span class="nn">pkg_resources</span>
+
+<span class="kn">from</span> <span class="nn">.exceptions</span> <span class="k">import</span> <span class="n">InvalidSpecification</span>
+<span class="kn">from</span> <span class="nn">.</span> <span class="k">import</span> <span class="n">get_backend</span>
+
+
+<span class="k">def</span> <span class="nf">get_default_schema</span><span class="p">():</span>
+    <span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Returns the absolute filepath default schema for pyhf. This usually points</span>
+<span class="sd">    to pyhf/data/spec.json.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        Schema File Path: a string containing the absolute path to the default</span>
+<span class="sd">                          schema file.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">pkg_resources</span><span class="o">.</span><span class="n">resource_filename</span><span class="p">(</span><span class="vm">__name__</span><span class="p">,</span> <span class="s1">&#39;data/spec.json&#39;</span><span class="p">)</span>
+
+
+<span class="n">SCHEMA_CACHE</span> <span class="o">=</span> <span class="p">{}</span>
+
+
+<span class="k">def</span> <span class="nf">load_schema</span><span class="p">(</span><span class="n">schema</span><span class="p">):</span>
+    <span class="k">global</span> <span class="n">SCHEMA_CACHE</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">SCHEMA_CACHE</span><span class="p">[</span><span class="n">schema</span><span class="p">]</span>
+    <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+        <span class="k">pass</span>
+
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">schema</span><span class="p">)</span> <span class="k">as</span> <span class="n">json_schema</span><span class="p">:</span>
+        <span class="n">SCHEMA_CACHE</span><span class="p">[</span><span class="n">schema</span><span class="p">]</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">json_schema</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">SCHEMA_CACHE</span><span class="p">[</span><span class="n">schema</span><span class="p">]</span>
+
+
+<span class="k">def</span> <span class="nf">validate</span><span class="p">(</span><span class="n">spec</span><span class="p">,</span> <span class="n">schema</span><span class="p">):</span>
+    <span class="n">schema</span> <span class="o">=</span> <span class="n">load_schema</span><span class="p">(</span><span class="n">schema</span><span class="p">)</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">jsonschema</span><span class="o">.</span><span class="n">validate</span><span class="p">(</span><span class="n">spec</span><span class="p">,</span> <span class="n">schema</span><span class="p">)</span>
+    <span class="k">except</span> <span class="n">jsonschema</span><span class="o">.</span><span class="n">ValidationError</span> <span class="k">as</span> <span class="n">err</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">InvalidSpecification</span><span class="p">(</span><span class="n">err</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="loglambdav"><a class="viewcode-back" href="../../_generated/pyhf.utils.loglambdav.html#pyhf.utils.loglambdav">[docs]</a><span class="k">def</span> <span class="nf">loglambdav</span><span class="p">(</span><span class="n">pars</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">pdf</span><span class="p">):</span>
+    <span class="k">return</span> <span class="o">-</span><span class="mi">2</span> <span class="o">*</span> <span class="n">pdf</span><span class="o">.</span><span class="n">logpdf</span><span class="p">(</span><span class="n">pars</span><span class="p">,</span> <span class="n">data</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="qmu"><a class="viewcode-back" href="../../_generated/pyhf.utils.qmu.html#pyhf.utils.qmu">[docs]</a><span class="k">def</span> <span class="nf">qmu</span><span class="p">(</span><span class="n">mu</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">pdf</span><span class="p">,</span> <span class="n">init_pars</span><span class="p">,</span> <span class="n">par_bounds</span><span class="p">):</span>
+    <span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    The test statistic, :math:`q_{\mu}`, for establishing an upper</span>
+<span class="sd">    limit on the strength parameter, :math:`\mu`, as defiend in</span>
+<span class="sd">    Equation (14) in `arXiv:1007.1727`_ .</span>
+
+<span class="sd">    .. _`arXiv:1007.1727`: https://arxiv.org/abs/1007.1727</span>
+
+<span class="sd">    .. math::</span>
+<span class="sd">       :nowrap:</span>
+
+<span class="sd">       \begin{equation}</span>
+<span class="sd">          q_{\mu} = \left\{\begin{array}{ll}</span>
+<span class="sd">          -2\ln\lambda\left(\mu\right), &amp;\hat{\mu} &lt; \mu,\\</span>
+<span class="sd">          0, &amp; \hat{\mu} &gt; \mu</span>
+<span class="sd">          \end{array}\right.</span>
+<span class="sd">        \end{equation}</span>
+
+
+<span class="sd">    Args:</span>
+<span class="sd">        mu (Number or Tensor): The signal strength parameter</span>
+<span class="sd">        data (Tensor): The data to be considered</span>
+<span class="sd">        pdf (|pyhf.pdf.Model|_): The HistFactory statistical model used in the likelihood ratio calculation</span>
+<span class="sd">        init_pars (Tensor): The initial parameters</span>
+<span class="sd">        par_bounds(Tensor): The bounds on the paramter values</span>
+
+<span class="sd">    .. |pyhf.pdf.Model| replace:: ``pyhf.pdf.Model``</span>
+<span class="sd">    .. _pyhf.pdf.Model: https://diana-hep.org/pyhf/_generated/pyhf.pdf.Model.html</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        Float: The calculated test statistic, :math:`q_{\mu}`</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">tensorlib</span><span class="p">,</span> <span class="n">optimizer</span> <span class="o">=</span> <span class="n">get_backend</span><span class="p">()</span>
+    <span class="n">mubhathat</span> <span class="o">=</span> <span class="n">optimizer</span><span class="o">.</span><span class="n">constrained_bestfit</span><span class="p">(</span>
+        <span class="n">loglambdav</span><span class="p">,</span> <span class="n">mu</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">pdf</span><span class="p">,</span> <span class="n">init_pars</span><span class="p">,</span> <span class="n">par_bounds</span>
+    <span class="p">)</span>
+    <span class="n">muhatbhat</span> <span class="o">=</span> <span class="n">optimizer</span><span class="o">.</span><span class="n">unconstrained_bestfit</span><span class="p">(</span>
+        <span class="n">loglambdav</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">pdf</span><span class="p">,</span> <span class="n">init_pars</span><span class="p">,</span> <span class="n">par_bounds</span>
+    <span class="p">)</span>
+    <span class="n">qmu</span> <span class="o">=</span> <span class="n">loglambdav</span><span class="p">(</span><span class="n">mubhathat</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">pdf</span><span class="p">)</span> <span class="o">-</span> <span class="n">loglambdav</span><span class="p">(</span><span class="n">muhatbhat</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">pdf</span><span class="p">)</span>
+    <span class="n">qmu</span> <span class="o">=</span> <span class="n">tensorlib</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">muhatbhat</span><span class="p">[</span><span class="n">pdf</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">poi_index</span><span class="p">]</span> <span class="o">&gt;</span> <span class="n">mu</span><span class="p">,</span> <span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">qmu</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">qmu</span></div>
+
+
+<div class="viewcode-block" id="generate_asimov_data"><a class="viewcode-back" href="../../_generated/pyhf.utils.generate_asimov_data.html#pyhf.utils.generate_asimov_data">[docs]</a><span class="k">def</span> <span class="nf">generate_asimov_data</span><span class="p">(</span><span class="n">asimov_mu</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">pdf</span><span class="p">,</span> <span class="n">init_pars</span><span class="p">,</span> <span class="n">par_bounds</span><span class="p">):</span>
+    <span class="n">_</span><span class="p">,</span> <span class="n">optimizer</span> <span class="o">=</span> <span class="n">get_backend</span><span class="p">()</span>
+    <span class="n">bestfit_nuisance_asimov</span> <span class="o">=</span> <span class="n">optimizer</span><span class="o">.</span><span class="n">constrained_bestfit</span><span class="p">(</span>
+        <span class="n">loglambdav</span><span class="p">,</span> <span class="n">asimov_mu</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">pdf</span><span class="p">,</span> <span class="n">init_pars</span><span class="p">,</span> <span class="n">par_bounds</span>
+    <span class="p">)</span>
+    <span class="k">return</span> <span class="n">pdf</span><span class="o">.</span><span class="n">expected_data</span><span class="p">(</span><span class="n">bestfit_nuisance_asimov</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="pvals_from_teststat"><a class="viewcode-back" href="../../_generated/pyhf.utils.pvals_from_teststat.html#pyhf.utils.pvals_from_teststat">[docs]</a><span class="k">def</span> <span class="nf">pvals_from_teststat</span><span class="p">(</span><span class="n">sqrtqmu_v</span><span class="p">,</span> <span class="n">sqrtqmuA_v</span><span class="p">):</span>
+    <span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    The :math:`p`-values for signal strength :math:`\mu` and Asimov strength :math:`\mu&#39;` as defined in Equations (59) and (57) of `arXiv:1007.1727`_</span>
+
+<span class="sd">    .. _`arXiv:1007.1727`: https://arxiv.org/abs/1007.1727</span>
+
+<span class="sd">    .. math::</span>
+
+<span class="sd">        p_{\mu} = 1-F\left(q_{\mu}\middle|\mu&#39;\right) = 1- \Phi\left(q_{\mu} - \frac{\left(\mu-\mu&#39;\right)}{\sigma}\right)</span>
+
+<span class="sd">    with Equation (29)</span>
+
+<span class="sd">    .. math::</span>
+
+<span class="sd">        \frac{(\mu-\mu&#39;)}{\sigma} = \sqrt{\Lambda}= \sqrt{q_{\mu,A}}</span>
+
+<span class="sd">    given the observed test statistics :math:`q_{\mu}` and :math:`q_{\mu,A}`.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        sqrtqmu_v (Number or Tensor): The root of the calculated test statistic, :math:`\sqrt{q_{\mu}}`</span>
+<span class="sd">        sqrtqmuA_v (Number or Tensor): The root of the calculated test statistic given the Asimov data, :math:`\sqrt{q_{\mu,A}}`</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        Tuple of Floats: The :math:`p`-values for the signal + background, background only, and signal only hypotheses respectivley</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">tensorlib</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">get_backend</span><span class="p">()</span>
+    <span class="n">CLsb</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">-</span> <span class="n">tensorlib</span><span class="o">.</span><span class="n">normal_cdf</span><span class="p">(</span><span class="n">sqrtqmu_v</span><span class="p">)</span>
+    <span class="n">CLb</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">-</span> <span class="n">tensorlib</span><span class="o">.</span><span class="n">normal_cdf</span><span class="p">(</span><span class="n">sqrtqmu_v</span> <span class="o">-</span> <span class="n">sqrtqmuA_v</span><span class="p">)</span>
+    <span class="n">CLs</span> <span class="o">=</span> <span class="n">CLsb</span> <span class="o">/</span> <span class="n">CLb</span>
+    <span class="k">return</span> <span class="n">CLsb</span><span class="p">,</span> <span class="n">CLb</span><span class="p">,</span> <span class="n">CLs</span></div>
+
+
+<div class="viewcode-block" id="hypotest"><a class="viewcode-back" href="../../_generated/pyhf.utils.hypotest.html#pyhf.utils.hypotest">[docs]</a><span class="k">def</span> <span class="nf">hypotest</span><span class="p">(</span><span class="n">poi_test</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">pdf</span><span class="p">,</span> <span class="n">init_pars</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">par_bounds</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Computes :math:`p`-values and test statistics for a single value of the parameter of interest</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        poi_test (Number or Tensor): The value of the parameter of interest (POI)</span>
+<span class="sd">        data (Number or Tensor): The root of the calculated test statistic given the Asimov data, :math:`\sqrt{q_{\mu,A}}`</span>
+<span class="sd">        pdf (|pyhf.pdf.Model|_): The HistFactory statistical model</span>
+<span class="sd">        init_pars (Array or Tensor): The initial parameter values to be used for minimization</span>
+<span class="sd">        par_bounds (Array or Tensor): The parameter value bounds to be used for minimization</span>
+
+<span class="sd">    .. |pyhf.pdf.Model| replace:: ``pyhf.pdf.Model``</span>
+<span class="sd">    .. _pyhf.pdf.Model: https://diana-hep.org/pyhf/_generated/pyhf.pdf.Model.html</span>
+
+<span class="sd">    Keyword Args:</span>
+<span class="sd">        return_tail_probs (bool): Bool for returning :math:`\textrm{CL}_{s+b}` and :math:`\textrm{CL}_{b}`</span>
+<span class="sd">        return_expected (bool): Bool for returning :math:`\textrm{CL}_{\textrm{exp}}`</span>
+<span class="sd">        return_expected_set (bool): Bool for returning the :math:`(-2,-1,0,1,2)\sigma` :math:`\textrm{CL}_{\textrm{exp}}` --- the &quot;Brazil band&quot;</span>
+<span class="sd">        return_test_statistics (bool): Bool for returning :math:`q_{\mu}` and :math:`q_{\mu,A}`</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        Tuple of Floats and lists of Floats:</span>
+
+<span class="sd">            - :math:`\textrm{CL}_{s}`: The :math:`p`-value compared to the given threshold :math:`\alpha`, typically taken to be :math:`0.05`, defined in `arXiv:1007.1727`_ as</span>
+
+<span class="sd">            .. _`arXiv:1007.1727`: https://arxiv.org/abs/1007.1727</span>
+
+<span class="sd">            .. math::</span>
+
+<span class="sd">                \textrm{CL}_{s} = \frac{\textrm{CL}_{s+b}}{\textrm{CL}_{b}} = \frac{p_{s+b}}{1-p_{b}}</span>
+
+<span class="sd">            to protect against excluding signal models in which there is little sensitivity. In the case that :math:`\textrm{CL}_{s} \leq \alpha` the given signal model is excluded.</span>
+
+<span class="sd">            - :math:`\left[\textrm{CL}_{s+b}, \textrm{CL}_{b}\right]`: The signal + background :math:`p`-value and 1 minus the background only :math:`p`-value as defined in Equations (75) and (76) of `arXiv:1007.1727`_</span>
+
+<span class="sd">            .. math::</span>
+
+<span class="sd">                \textrm{CL}_{s+b} = p_{s+b} = \int\limits_{q_{\textrm{obs}}}^{\infty} f\left(q\,\middle|s+b\right)\,dq = 1 - \Phi\left(\frac{q_{\textrm{obs}} + 1/\sigma_{s+b}^{2}}{2/\sigma_{s+b}}\right)</span>
+
+<span class="sd">            .. math::</span>
+
+<span class="sd">                \textrm{CL}_{b} = 1- p_{b} = 1 - \int\limits_{-\infty}^{q_{\textrm{obs}}} f\left(q\,\middle|b\right)\,dq = 1 - \Phi\left(\frac{q_{\textrm{obs}} - 1/\sigma_{b}^{2}}{2/\sigma_{b}}\right)</span>
+
+<span class="sd">            with Equations (73) and (74) for the mean</span>
+
+<span class="sd">            .. math::</span>
+
+<span class="sd">                E\left[q\right] = \frac{1 - 2\mu}{\sigma^{2}}</span>
+
+<span class="sd">            and variance</span>
+
+<span class="sd">            .. math::</span>
+
+<span class="sd">                V\left[q\right] = \frac{4}{\sigma^{2}}</span>
+
+<span class="sd">            of the test statistic :math:`q` under the background only and and signal + background hypotheses. Only returned when ``return_tail_probs`` is ``True``.</span>
+
+<span class="sd">            - :math:`\textrm{CL}_{s,\textrm{exp}}`: The expected :math:`\textrm{CL}_{s}` value corresponding to the test statistic under the background only hypothesis :math:`\left(\mu=0\right)`. Only returned when ``return_expected`` is ``True``.</span>
+
+<span class="sd">            - :math:`\textrm{CL}_{s,\textrm{exp}}` band: The set of expected :math:`\textrm{CL}_{s}` values corresponding to the median significance of variations of the signal strength from the background only hypothesis :math:`\left(\mu=0\right)` at :math:`(-2,-1,0,1,2)\sigma`. That is, the :math:`p`-values that satisfy Equation (89) of `arXiv:1007.1727`_</span>
+
+<span class="sd">            .. math::</span>
+
+<span class="sd">                \textrm{band}_{N\sigma} = \mu&#39; + \sigma\,\Phi^{-1}\left(1-\alpha\right) \pm N\sigma</span>
+
+<span class="sd">            for :math:`\mu&#39;=0` and :math:`N \in \left\{-2, -1, 0, 1, 2\right\}`. These values define the boundaries of an uncertainty band sometimes referred to as the &quot;Brazil band&quot;. Only returned when ``return_expected_set`` is ``True``.</span>
+
+<span class="sd">            - :math:`\left[q_{\mu}, q_{\mu,A}\right]`: The test statistics for the observed and Asimov datasets respectively. Only returned when ``return_test_statistics`` is ``True``.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">init_pars</span> <span class="o">=</span> <span class="n">init_pars</span> <span class="ow">or</span> <span class="n">pdf</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">suggested_init</span><span class="p">()</span>
+    <span class="n">par_bounds</span> <span class="o">=</span> <span class="n">par_bounds</span> <span class="ow">or</span> <span class="n">pdf</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">suggested_bounds</span><span class="p">()</span>
+    <span class="n">tensorlib</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">get_backend</span><span class="p">()</span>
+
+    <span class="n">asimov_mu</span> <span class="o">=</span> <span class="mf">0.0</span>
+    <span class="n">asimov_data</span> <span class="o">=</span> <span class="n">generate_asimov_data</span><span class="p">(</span><span class="n">asimov_mu</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">pdf</span><span class="p">,</span> <span class="n">init_pars</span><span class="p">,</span> <span class="n">par_bounds</span><span class="p">)</span>
+
+    <span class="n">qmu_v</span> <span class="o">=</span> <span class="n">tensorlib</span><span class="o">.</span><span class="n">clip</span><span class="p">(</span><span class="n">qmu</span><span class="p">(</span><span class="n">poi_test</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">pdf</span><span class="p">,</span> <span class="n">init_pars</span><span class="p">,</span> <span class="n">par_bounds</span><span class="p">),</span> <span class="mi">0</span><span class="p">,</span> <span class="nb">max</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+    <span class="n">sqrtqmu_v</span> <span class="o">=</span> <span class="n">tensorlib</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">qmu_v</span><span class="p">)</span>
+
+    <span class="n">qmuA_v</span> <span class="o">=</span> <span class="n">tensorlib</span><span class="o">.</span><span class="n">clip</span><span class="p">(</span>
+        <span class="n">qmu</span><span class="p">(</span><span class="n">poi_test</span><span class="p">,</span> <span class="n">asimov_data</span><span class="p">,</span> <span class="n">pdf</span><span class="p">,</span> <span class="n">init_pars</span><span class="p">,</span> <span class="n">par_bounds</span><span class="p">),</span> <span class="mi">0</span><span class="p">,</span> <span class="nb">max</span><span class="o">=</span><span class="kc">None</span>
+    <span class="p">)</span>
+    <span class="n">sqrtqmuA_v</span> <span class="o">=</span> <span class="n">tensorlib</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">qmuA_v</span><span class="p">)</span>
+
+    <span class="n">CLsb</span><span class="p">,</span> <span class="n">CLb</span><span class="p">,</span> <span class="n">CLs</span> <span class="o">=</span> <span class="n">pvals_from_teststat</span><span class="p">(</span><span class="n">sqrtqmu_v</span><span class="p">,</span> <span class="n">sqrtqmuA_v</span><span class="p">)</span>
+
+    <span class="n">_returns</span> <span class="o">=</span> <span class="p">[</span><span class="n">CLs</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;return_tail_probs&#39;</span><span class="p">):</span>
+        <span class="n">_returns</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="n">CLsb</span><span class="p">,</span> <span class="n">CLb</span><span class="p">])</span>
+    <span class="k">if</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;return_expected_set&#39;</span><span class="p">):</span>
+        <span class="n">CLs_exp</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">n_sigma</span> <span class="ow">in</span> <span class="p">[</span><span class="o">-</span><span class="mi">2</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">]:</span>
+            <span class="n">sqrtqmu_v_sigma</span> <span class="o">=</span> <span class="n">sqrtqmuA_v</span> <span class="o">-</span> <span class="n">n_sigma</span>
+            <span class="n">CLs_exp</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">pvals_from_teststat</span><span class="p">(</span><span class="n">sqrtqmu_v_sigma</span><span class="p">,</span> <span class="n">sqrtqmuA_v</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+        <span class="n">CLs_exp</span> <span class="o">=</span> <span class="n">tensorlib</span><span class="o">.</span><span class="n">astensor</span><span class="p">(</span><span class="n">CLs_exp</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;return_expected&#39;</span><span class="p">):</span>
+            <span class="n">_returns</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">CLs_exp</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span>
+        <span class="n">_returns</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">CLs_exp</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;return_expected&#39;</span><span class="p">):</span>
+        <span class="n">_returns</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">pvals_from_teststat</span><span class="p">(</span><span class="n">sqrtqmuA_v</span><span class="p">,</span> <span class="n">sqrtqmuA_v</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+    <span class="k">if</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;return_test_statistics&#39;</span><span class="p">):</span>
+        <span class="n">_returns</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="n">qmu_v</span><span class="p">,</span> <span class="n">qmuA_v</span><span class="p">])</span>
+
+    <span class="c1"># Enforce a consistent return type of the observed CLs</span>
+    <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">_returns</span><span class="p">)</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">_returns</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span> <span class="k">else</span> <span class="n">_returns</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span></div>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2018, Lukas Heinrich, Matthew Feickert, Giordon Stark
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+        <script type="text/javascript" src="../../_static/jquery.js"></script>
+        <script type="text/javascript" src="../../_static/underscore.js"></script>
+        <script type="text/javascript" src="../../_static/doctools.js"></script>
+        <script type="text/javascript" src="../../_static/language_data.js"></script>
+        <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+        <script type="text/x-mathjax-config">MathJax.Hub.Config({"tex2jax": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true, "ignoreClass": "document", "processClass": "math|output_area"}})</script>
+    
+
+  
+
+  <script type="text/javascript" src="../../_static/js/theme.js"></script>
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

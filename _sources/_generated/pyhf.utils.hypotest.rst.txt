@@ -1,0 +1,6 @@
+pyhf.utils.hypotest
+===================
+
+.. currentmodule:: pyhf.utils
+
+.. autofunction:: hypotest

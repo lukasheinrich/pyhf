@@ -1,0 +1,305 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>pyhf.utils.qmu &mdash; pyhf 0.0.15 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/github-fork-ribbon-css/0.2.2/gh-fork-ribbon.min.css" type="text/css" />
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="pyhf.utils.hypotest" href="pyhf.utils.hypotest.html" />
+    <link rel="prev" title="pyhf.utils.pvals_from_teststat" href="pyhf.utils.pvals_from_teststat.html" /> 
+
+  
+  <script src="../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> pyhf
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.0.15
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../examples.html">Examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../talks.html">Talks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../development.html">Developing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../faq.html">FAQ</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../api.html">API</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../api.html#top-level">Top-Level</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api.html#making-probability-distribution-functions-pdfs">Making Probability Distribution Functions (PDFs)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api.html#backends">Backends</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api.html#optimizers">Optimizers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api.html#modifiers">Modifiers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api.html#interpolators">Interpolators</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api.html#exceptions">Exceptions</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="../api.html#utilities">Utilities</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="pyhf.utils.generate_asimov_data.html">pyhf.utils.generate_asimov_data</a></li>
+<li class="toctree-l3"><a class="reference internal" href="pyhf.utils.loglambdav.html">pyhf.utils.loglambdav</a></li>
+<li class="toctree-l3"><a class="reference internal" href="pyhf.utils.pvals_from_teststat.html">pyhf.utils.pvals_from_teststat</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">pyhf.utils.qmu</a></li>
+<li class="toctree-l3"><a class="reference internal" href="pyhf.utils.hypotest.html">pyhf.utils.hypotest</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../citations.html">Use and Citations</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">pyhf</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../api.html">API</a> &raquo;</li>
+        
+      <li>pyhf.utils.qmu</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="../_sources/_generated/pyhf.utils.qmu.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  
+<style>
+/* CSS overrides for sphinx_rtd_theme */
+
+/* 24px margin */
+.nbinput.nblast,
+.nboutput.nblast {
+    margin-bottom: 19px;  /* padding has already 5px */
+}
+
+/* ... except between code cells! */
+.nblast + .nbinput {
+    margin-top: -19px;
+}
+
+.admonition > p:before {
+    margin-right: 4px;  /* make room for the exclamation icon */
+}
+
+/* Fix math alignment, see https://github.com/rtfd/sphinx_rtd_theme/pull/686 */
+.math {
+    text-align: unset;
+}
+</style>
+<div class="section" id="pyhf-utils-qmu">
+<h1>pyhf.utils.qmu<a class="headerlink" href="#pyhf-utils-qmu" title="Permalink to this headline">¶</a></h1>
+<dl class="function">
+<dt id="pyhf.utils.qmu">
+<code class="descclassname">pyhf.utils.</code><code class="descname">qmu</code><span class="sig-paren">(</span><em>mu</em>, <em>data</em>, <em>pdf</em>, <em>init_pars</em>, <em>par_bounds</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pyhf/utils.html#qmu"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyhf.utils.qmu" title="Permalink to this definition">¶</a></dt>
+<dd><p>The test statistic, <span class="math notranslate nohighlight">\(q_{\mu}\)</span>, for establishing an upper
+limit on the strength parameter, <span class="math notranslate nohighlight">\(\mu\)</span>, as defiend in
+Equation (14) in <a class="reference external" href="https://arxiv.org/abs/1007.1727">arXiv:1007.1727</a> .</p>
+<div class="math notranslate nohighlight">
+\begin{equation}
+   q_{\mu} = \left\{\begin{array}{ll}
+   -2\ln\lambda\left(\mu\right), &amp;\hat{\mu} &lt; \mu,\\
+   0, &amp; \hat{\mu} &gt; \mu
+   \end{array}\right.
+ \end{equation}</div><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>mu</strong> (<em>Number</em><em> or </em><em>Tensor</em>) – The signal strength parameter</li>
+<li><strong>data</strong> (<em>Tensor</em>) – The data to be considered</li>
+<li><strong>pdf</strong> (<a class="reference external" href="https://diana-hep.org/pyhf/_generated/pyhf.pdf.Model.html"><code class="docutils literal notranslate"><span class="pre">pyhf.pdf.Model</span></code></a>) – The HistFactory statistical model used in the likelihood ratio calculation</li>
+<li><strong>init_pars</strong> (<em>Tensor</em>) – The initial parameters</li>
+<li><strong>par_bounds</strong> (<em>Tensor</em>) – The bounds on the paramter values</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">The calculated test statistic, <span class="math notranslate nohighlight">\(q_{\mu}\)</span></td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">Float</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="pyhf.utils.hypotest.html" class="btn btn-neutral float-right" title="pyhf.utils.hypotest" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="pyhf.utils.pvals_from_teststat.html" class="btn btn-neutral" title="pyhf.utils.pvals_from_teststat" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2018, Lukas Heinrich, Matthew Feickert, Giordon Stark
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script type="text/javascript" src="../_static/jquery.js"></script>
+        <script type="text/javascript" src="../_static/underscore.js"></script>
+        <script type="text/javascript" src="../_static/doctools.js"></script>
+        <script type="text/javascript" src="../_static/language_data.js"></script>
+        <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+        <script type="text/x-mathjax-config">MathJax.Hub.Config({"tex2jax": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true, "ignoreClass": "document", "processClass": "math|output_area"}})</script>
+    
+
+  
+
+  <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

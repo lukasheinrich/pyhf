@@ -1,0 +1,146 @@
+{
+ "cells": [
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "# HistoSys with PyTorch"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 1,
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Populating the interactive namespace from numpy and matplotlib\n"
+     ]
+    }
+   ],
+   "source": [
+    "%pylab inline"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 2,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "import pyhf\n",
+    "from pyhf import Model\n",
+    "from pyhf.simplemodels import hepdata_like\n",
+    "\n",
+    "import tensorflow as tf"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 3,
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "[120.0, 180.0, 100.0, 225.0]\n",
+      "[[0, 10], [0, 10], [0, 10]]\n",
+      "['mu', 'uncorr_bkguncrt']\n"
+     ]
+    }
+   ],
+   "source": [
+    "source = {\n",
+    "  \"binning\": [2,-0.5,1.5],\n",
+    "  \"bindata\": {\n",
+    "    \"data\":    [120.0, 180.0],\n",
+    "    \"bkg\":     [100.0, 150.0],\n",
+    "    \"bkgerr\":     [10.0, 10.0],\n",
+    "    \"sig\":     [30.0, 95.0]\n",
+    "  }\n",
+    "}\n",
+    "\n",
+    "pdf  = hepdata_like(source['bindata']['sig'], source['bindata']['bkg'], source['bindata']['bkgerr'])\n",
+    "data = source['bindata']['data'] + pdf.config.auxdata\n",
+    "\n",
+    "init_pars = pdf.config.suggested_init()\n",
+    "par_bounds = pdf.config.suggested_bounds()\n",
+    "\n",
+    "print(data)\n",
+    "print(par_bounds)\n",
+    "print(pdf.config.par_order)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 4,
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\n",
+      "# NumPy\n",
+      "<class 'numpy.ndarray'> [-23.57960517]\n",
+      "\n",
+      "# TensorFlow\n",
+      "<class 'tensorflow.python.framework.ops.Tensor'> Tensor(\"mul:0\", shape=(1,), dtype=float32)\n",
+      "\n",
+      "# PyTorch\n",
+      "<class 'torch.Tensor'> tensor([-23.5796])\n",
+      "\n",
+      "# MXNet\n",
+      "<class 'mxnet.ndarray.ndarray.NDArray'> \n",
+      "[-23.57959]\n",
+      "<NDArray 1 @cpu(0)>\n"
+     ]
+    }
+   ],
+   "source": [
+    "backends = [\n",
+    "    pyhf.tensor.numpy_backend(),\n",
+    "    pyhf.tensor.tensorflow_backend(session=tf.Session()),\n",
+    "    pyhf.tensor.pytorch_backend(),\n",
+    "    pyhf.tensor.mxnet_backend()\n",
+    "]\n",
+    "names = [\n",
+    "    'NumPy',\n",
+    "    'TensorFlow',\n",
+    "    'PyTorch',\n",
+    "    'MXNet'\n",
+    "]\n",
+    "\n",
+    "for backend,name in zip(backends,names):\n",
+    "    print('\\n# {name}'.format(name=name))\n",
+    "    pyhf.set_backend(backend)\n",
+    "    v =  pdf.logpdf(init_pars,data)\n",
+    "    print(type(v), v)"
+   ]
+  }
+ ],
+ "metadata": {
+  "kernelspec": {
+   "display_name": "Python 3",
+   "language": "python",
+   "name": "python3"
+  },
+  "language_info": {
+   "codemirror_mode": {
+    "name": "ipython",
+    "version": 3
+   },
+   "file_extension": ".py",
+   "mimetype": "text/x-python",
+   "name": "python",
+   "nbconvert_exporter": "python",
+   "pygments_lexer": "ipython3",
+   "version": "3.6.6"
+  }
+ },
+ "nbformat": 4,
+ "nbformat_minor": 2
+}

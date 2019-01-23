@@ -1,0 +1,103 @@
+{
+ "cells": [
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "# MXNet"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 1,
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Populating the interactive namespace from numpy and matplotlib\n"
+     ]
+    }
+   ],
+   "source": [
+    "%pylab inline"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 2,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "import pyhf\n",
+    "from pyhf import Model\n",
+    "from pyhf.simplemodels import hepdata_like\n",
+    "import mxnet as mx"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 3,
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "--------\n",
+      "as MXNet\n",
+      "--------\n",
+      "<class 'mxnet.ndarray.ndarray.NDArray'> \n",
+      "[-22.87784958]\n",
+      "<NDArray 1 @cpu(0)>\n"
+     ]
+    }
+   ],
+   "source": [
+    "source = {\n",
+    "  \"binning\": [2,-0.5,1.5],\n",
+    "  \"bindata\": {\n",
+    "    \"data\": [120.0, 180.0],\n",
+    "    \"bkg\": [100.0, 150.0],\n",
+    "    \"bkgerr\": [10.0, 10.0],\n",
+    "    \"sig\": [30.0, 95.0]\n",
+    "  }\n",
+    "}\n",
+    "\n",
+    "pdf = hepdata_like(source['bindata']['sig'], source['bindata']['bkg'], source['bindata']['bkgerr'])\n",
+    "data = source['bindata']['data'] + pdf.config.auxdata\n",
+    "\n",
+    "init_pars = pdf.config.suggested_init()\n",
+    "par_bounds = pdf.config.suggested_bounds()\n",
+    "\n",
+    "\n",
+    "print('--------\\nas MXNet\\n--------')\n",
+    "pyhf.tensorlib = pyhf.mxnet_backend()\n",
+    "v = pdf.logpdf(init_pars, data)\n",
+    "print(type(v),v)"
+   ]
+  }
+ ],
+ "metadata": {
+  "kernelspec": {
+   "display_name": "Python 2",
+   "language": "python",
+   "name": "python2"
+  },
+  "language_info": {
+   "codemirror_mode": {
+    "name": "ipython",
+    "version": 2
+   },
+   "file_extension": ".py",
+   "mimetype": "text/x-python",
+   "name": "python",
+   "nbconvert_exporter": "python",
+   "pygments_lexer": "ipython2",
+   "version": "2.7.14"
+  }
+ },
+ "nbformat": 4,
+ "nbformat_minor": 2
+}

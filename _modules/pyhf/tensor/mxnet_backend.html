@@ -1,0 +1,695 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>pyhf.tensor.mxnet_backend &mdash; pyhf 0.0.15 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/github-fork-ribbon-css/0.2.2/gh-fork-ribbon.min.css" type="text/css" />
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+
+  
+  <script src="../../../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../../../index.html" class="icon icon-home"> pyhf
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.0.15
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../examples.html">Examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../talks.html">Talks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../development.html">Developing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../faq.html">FAQ</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api.html">API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../citations.html">Use and Citations</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">pyhf</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+        
+          <li><a href="../../pyhf.html">pyhf</a> &raquo;</li>
+        
+      <li>pyhf.tensor.mxnet_backend</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for pyhf.tensor.mxnet_backend</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span> <span class="nn">mxnet</span> <span class="k">import</span> <span class="n">nd</span>
+
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">import</span> <span class="nn">math</span>  <span class="c1"># Required for normal()</span>
+<span class="kn">from</span> <span class="nn">numbers</span> <span class="k">import</span> <span class="n">Number</span>  <span class="c1"># Required for normal()</span>
+<span class="kn">from</span> <span class="nn">scipy.stats</span> <span class="k">import</span> <span class="n">norm</span>  <span class="c1"># Required for normal_cdf()</span>
+
+<span class="n">log</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="mxnet_backend"><a class="viewcode-back" href="../../../_generated/pyhf.tensor.mxnet_backend.mxnet_backend.html#pyhf.tensor.mxnet_backend.mxnet_backend">[docs]</a><span class="k">class</span> <span class="nc">mxnet_backend</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;MXNet backend for pyhf&quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="mxnet_backend.__init__"><a class="viewcode-back" href="../../../_generated/pyhf.tensor.mxnet_backend.mxnet_backend.html#pyhf.tensor.mxnet_backend.mxnet_backend.__init__">[docs]</a>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;mxnet&#39;</span></div>
+
+<div class="viewcode-block" id="mxnet_backend.clip"><a class="viewcode-back" href="../../../_generated/pyhf.tensor.mxnet_backend.mxnet_backend.html#pyhf.tensor.mxnet_backend.mxnet_backend.clip">[docs]</a>    <span class="k">def</span> <span class="nf">clip</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tensor_in</span><span class="p">,</span> <span class="nb">min</span><span class="p">,</span> <span class="nb">max</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Clips (limits) the tensor values to be within a specified min and max.</span>
+
+<span class="sd">        Example:</span>
+
+<span class="sd">            &gt;&gt;&gt; import pyhf</span>
+<span class="sd">            &gt;&gt;&gt; pyhf.set_backend(pyhf.tensor.mxnet_backend())</span>
+<span class="sd">            &gt;&gt;&gt; a = pyhf.tensorlib.astensor([-2, -1, 0, 1, 2])</span>
+<span class="sd">            &gt;&gt;&gt; pyhf.tensorlib.clip(a, -1, 1)</span>
+<span class="sd">            &lt;BLANKLINE&gt;</span>
+<span class="sd">            [-1. -1.  0.  1.  1.]</span>
+<span class="sd">            &lt;NDArray 5 @cpu(0)&gt;</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            tensor_in (`tensor`): The input tensor object</span>
+<span class="sd">            min (`scalar` or `tensor` or `None`): The minimum value to be cliped to</span>
+<span class="sd">            max (`scalar` or `tensor` or `None`): The maximum value to be cliped to</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            MXNet NDArray: A clipped `tensor`</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">tensor_in</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">astensor</span><span class="p">(</span><span class="n">tensor_in</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">nd</span><span class="o">.</span><span class="n">clip</span><span class="p">(</span><span class="n">tensor_in</span><span class="p">,</span> <span class="nb">min</span><span class="p">,</span> <span class="nb">max</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="mxnet_backend.tolist"><a class="viewcode-back" href="../../../_generated/pyhf.tensor.mxnet_backend.mxnet_backend.html#pyhf.tensor.mxnet_backend.mxnet_backend.tolist">[docs]</a>    <span class="k">def</span> <span class="nf">tolist</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tensor_in</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Convert a tensor to a list.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            tensor_in (Tensor): Input MXNet tensor</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            list: The possibly nested list of tensor elements.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">tensor_in</span><span class="o">.</span><span class="n">asnumpy</span><span class="p">()</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
+        <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">tensor_in</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+                <span class="k">return</span> <span class="n">tensor_in</span>
+            <span class="k">raise</span></div>
+
+<div class="viewcode-block" id="mxnet_backend.outer"><a class="viewcode-back" href="../../../_generated/pyhf.tensor.mxnet_backend.mxnet_backend.html#pyhf.tensor.mxnet_backend.mxnet_backend.outer">[docs]</a>    <span class="k">def</span> <span class="nf">outer</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tensor_in_1</span><span class="p">,</span> <span class="n">tensor_in_2</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        The outer product of two tensors.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            tensor_in_1 (Tensor): Tensor object</span>
+<span class="sd">            tensor_in_2 (Tensor): Tensor object</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            MXNet NDArray: The outer product.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">tensor_in_1</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">astensor</span><span class="p">(</span><span class="n">tensor_in_1</span><span class="p">)</span>
+        <span class="n">tensor_in_2</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">astensor</span><span class="p">(</span><span class="n">tensor_in_2</span><span class="p">)</span>
+
+        <span class="n">tensor_1_shape</span> <span class="o">=</span> <span class="n">tensor_in_1</span><span class="o">.</span><span class="n">shape</span>
+        <span class="n">tensor_2_shape</span> <span class="o">=</span> <span class="n">tensor_in_2</span><span class="o">.</span><span class="n">shape</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">tensor_1_shape</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">tensor_1_shape</span> <span class="o">=</span> <span class="p">(</span><span class="n">tensor_1_shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">tensor_2_shape</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">tensor_2_shape</span> <span class="o">=</span> <span class="p">(</span><span class="n">tensor_2_shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="mi">1</span><span class="p">)</span>
+
+        <span class="n">rows1</span><span class="p">,</span> <span class="n">cols1</span> <span class="o">=</span> <span class="n">tensor_1_shape</span>
+        <span class="n">rows2</span><span class="p">,</span> <span class="n">cols2</span> <span class="o">=</span> <span class="n">tensor_2_shape</span>
+        <span class="k">return</span> <span class="n">nd</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span>
+            <span class="n">nd</span><span class="o">.</span><span class="n">broadcast_mul</span><span class="p">(</span>
+                <span class="n">tensor_in_1</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="n">rows1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">cols1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)),</span>
+                <span class="n">tensor_in_2</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="mi">1</span><span class="p">,</span> <span class="n">rows2</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">cols2</span><span class="p">)),</span>
+            <span class="p">),</span>
+            <span class="p">(</span><span class="n">rows1</span> <span class="o">*</span> <span class="n">cols1</span><span class="p">,</span> <span class="n">rows2</span> <span class="o">*</span> <span class="n">cols2</span><span class="p">),</span>
+        <span class="p">)</span></div>
+
+<div class="viewcode-block" id="mxnet_backend.gather"><a class="viewcode-back" href="../../../_generated/pyhf.tensor.mxnet_backend.mxnet_backend.html#pyhf.tensor.mxnet_backend.mxnet_backend.gather">[docs]</a>    <span class="k">def</span> <span class="nf">gather</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tensor</span><span class="p">,</span> <span class="n">indices</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">tensor</span><span class="p">[</span><span class="n">indices</span><span class="p">]</span></div>
+
+<div class="viewcode-block" id="mxnet_backend.boolean_mask"><a class="viewcode-back" href="../../../_generated/pyhf.tensor.mxnet_backend.mxnet_backend.html#pyhf.tensor.mxnet_backend.mxnet_backend.boolean_mask">[docs]</a>    <span class="k">def</span> <span class="nf">boolean_mask</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tensor</span><span class="p">,</span> <span class="n">mask</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;mxnet::boolean_mask is not implemented.&quot;</span><span class="p">)</span>
+        <span class="k">return</span></div>
+
+<div class="viewcode-block" id="mxnet_backend.astensor"><a class="viewcode-back" href="../../../_generated/pyhf.tensor.mxnet_backend.mxnet_backend.html#pyhf.tensor.mxnet_backend.mxnet_backend.astensor">[docs]</a>    <span class="k">def</span> <span class="nf">astensor</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tensor_in</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="s1">&#39;float&#39;</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Convert to a MXNet NDArray.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            tensor_in (Number or Tensor): Tensor object</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            MXNet NDArray: A multi-dimensional, fixed-size homogenous array.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">dtypemap</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;float&#39;</span><span class="p">:</span> <span class="s1">&#39;float32&#39;</span><span class="p">,</span> <span class="s1">&#39;int&#39;</span><span class="p">:</span> <span class="s1">&#39;int32&#39;</span><span class="p">,</span> <span class="s1">&#39;bool&#39;</span><span class="p">:</span> <span class="s1">&#39;uint8&#39;</span><span class="p">}</span>
+        <span class="n">dtype</span> <span class="o">=</span> <span class="n">dtypemap</span><span class="p">[</span><span class="n">dtype</span><span class="p">]</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">tensor</span> <span class="o">=</span> <span class="n">nd</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">tensor_in</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">dtype</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+            <span class="n">tensor</span> <span class="o">=</span> <span class="n">nd</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">tensor_in</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">dtype</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">tensor</span></div>
+
+<div class="viewcode-block" id="mxnet_backend.sum"><a class="viewcode-back" href="../../../_generated/pyhf.tensor.mxnet_backend.mxnet_backend.html#pyhf.tensor.mxnet_backend.mxnet_backend.sum">[docs]</a>    <span class="k">def</span> <span class="nf">sum</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tensor_in</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Compute the sum of array elements over given axes.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            tensor_in (Tensor): Tensor object</span>
+<span class="sd">            axis (Number): The axes over which to sum</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            MXNet NDArray: ndarray of the sum over the axes.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">tensor_in</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">astensor</span><span class="p">(</span><span class="n">tensor_in</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">axis</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">tensor_in</span><span class="o">.</span><span class="n">shape</span> <span class="o">==</span> <span class="n">nd</span><span class="o">.</span><span class="n">array</span><span class="p">([])</span><span class="o">.</span><span class="n">size</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">nd</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">tensor_in</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">nd</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">tensor_in</span><span class="p">,</span> <span class="n">axis</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="mxnet_backend.product"><a class="viewcode-back" href="../../../_generated/pyhf.tensor.mxnet_backend.mxnet_backend.html#pyhf.tensor.mxnet_backend.mxnet_backend.product">[docs]</a>    <span class="k">def</span> <span class="nf">product</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tensor_in</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Product of array elements over given axes.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            tensor_in (Tensor): Tensor object</span>
+<span class="sd">            axis (Number): The axes over which to take the product</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            MXNet NDArray: ndarray of the product over the axes.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">tensor_in</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">astensor</span><span class="p">(</span><span class="n">tensor_in</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">axis</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">nd</span><span class="o">.</span><span class="n">prod</span><span class="p">(</span><span class="n">tensor_in</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">nd</span><span class="o">.</span><span class="n">prod</span><span class="p">(</span><span class="n">tensor_in</span><span class="p">,</span> <span class="n">axis</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="mxnet_backend.abs"><a class="viewcode-back" href="../../../_generated/pyhf.tensor.mxnet_backend.mxnet_backend.html#pyhf.tensor.mxnet_backend.mxnet_backend.abs">[docs]</a>    <span class="k">def</span> <span class="nf">abs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tensor</span><span class="p">):</span>
+        <span class="n">tensor</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">astensor</span><span class="p">(</span><span class="n">tensor</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">nd</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">tensor</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="mxnet_backend.ones"><a class="viewcode-back" href="../../../_generated/pyhf.tensor.mxnet_backend.mxnet_backend.html#pyhf.tensor.mxnet_backend.mxnet_backend.ones">[docs]</a>    <span class="k">def</span> <span class="nf">ones</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">shape</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        A new array filled with all ones, with the given shape.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            shape (Number): The shape of the array</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            MXNet NDArray: ndarray of 1&#39;s with given shape.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">nd</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">shape</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="mxnet_backend.zeros"><a class="viewcode-back" href="../../../_generated/pyhf.tensor.mxnet_backend.mxnet_backend.html#pyhf.tensor.mxnet_backend.mxnet_backend.zeros">[docs]</a>    <span class="k">def</span> <span class="nf">zeros</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">shape</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        A new array filled with all zeros, with the given shape.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            shape (Number): The shape of the array</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            MXNet NDArray: ndarray of 0&#39;s with given shape.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">nd</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">shape</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="mxnet_backend.power"><a class="viewcode-back" href="../../../_generated/pyhf.tensor.mxnet_backend.mxnet_backend.html#pyhf.tensor.mxnet_backend.mxnet_backend.power">[docs]</a>    <span class="k">def</span> <span class="nf">power</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tensor_in_1</span><span class="p">,</span> <span class="n">tensor_in_2</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Result of first array elements raised to powers from second array,</span>
+<span class="sd">        element-wise with broadcasting.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            tensor_in_1 (Tensor): Tensor object</span>
+<span class="sd">            tensor_in_2 (Tensor): Tensor object</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            MXNet NDArray: First array elements raised to powers from second array.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">tensor_in_1</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">astensor</span><span class="p">(</span><span class="n">tensor_in_1</span><span class="p">)</span>
+        <span class="n">tensor_in_2</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">astensor</span><span class="p">(</span><span class="n">tensor_in_2</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">nd</span><span class="o">.</span><span class="n">power</span><span class="p">(</span><span class="n">tensor_in_1</span><span class="p">,</span> <span class="n">tensor_in_2</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="mxnet_backend.sqrt"><a class="viewcode-back" href="../../../_generated/pyhf.tensor.mxnet_backend.mxnet_backend.html#pyhf.tensor.mxnet_backend.mxnet_backend.sqrt">[docs]</a>    <span class="k">def</span> <span class="nf">sqrt</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tensor_in</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Element-wise square-root value of the input.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            tensor_in (Tensor): Tensor object</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            MXNet NDArray: Element-wise square-root value.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">tensor_in</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">astensor</span><span class="p">(</span><span class="n">tensor_in</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">nd</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">tensor_in</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="mxnet_backend.divide"><a class="viewcode-back" href="../../../_generated/pyhf.tensor.mxnet_backend.mxnet_backend.html#pyhf.tensor.mxnet_backend.mxnet_backend.divide">[docs]</a>    <span class="k">def</span> <span class="nf">divide</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tensor_in_1</span><span class="p">,</span> <span class="n">tensor_in_2</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Element-wise division of the input arrays with broadcasting.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            tensor_in_1 (Tensor): Tensor object</span>
+<span class="sd">            tensor_in_2 (Tensor): Tensor object</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            MXNet NDArray: Element-wise division of the input arrays.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">tensor_in_1</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">astensor</span><span class="p">(</span><span class="n">tensor_in_1</span><span class="p">)</span>
+        <span class="n">tensor_in_2</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">astensor</span><span class="p">(</span><span class="n">tensor_in_2</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">nd</span><span class="o">.</span><span class="n">divide</span><span class="p">(</span><span class="n">tensor_in_1</span><span class="p">,</span> <span class="n">tensor_in_2</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="mxnet_backend.log"><a class="viewcode-back" href="../../../_generated/pyhf.tensor.mxnet_backend.mxnet_backend.html#pyhf.tensor.mxnet_backend.mxnet_backend.log">[docs]</a>    <span class="k">def</span> <span class="nf">log</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tensor_in</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Element-wise Natural logarithmic value of the input.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            tensor_in (Tensor): Tensor object</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            MXNet NDArray: Element-wise Natural logarithmic value.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">tensor_in</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">astensor</span><span class="p">(</span><span class="n">tensor_in</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">nd</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">tensor_in</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="mxnet_backend.exp"><a class="viewcode-back" href="../../../_generated/pyhf.tensor.mxnet_backend.mxnet_backend.html#pyhf.tensor.mxnet_backend.mxnet_backend.exp">[docs]</a>    <span class="k">def</span> <span class="nf">exp</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tensor_in</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Element-wise exponential value of the input.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            tensor_in (Tensor): Tensor object</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            MXNet NDArray: Element-wise exponential value.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">tensor_in</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">astensor</span><span class="p">(</span><span class="n">tensor_in</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">nd</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">tensor_in</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="mxnet_backend.stack"><a class="viewcode-back" href="../../../_generated/pyhf.tensor.mxnet_backend.mxnet_backend.html#pyhf.tensor.mxnet_backend.mxnet_backend.stack">[docs]</a>    <span class="k">def</span> <span class="nf">stack</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sequence</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Join a sequence of arrays along a new axis.</span>
+
+<span class="sd">        The axis parameter specifies the index of the new axis in the dimensions</span>
+<span class="sd">        of the result. For example, if axis=0 it will be the first dimension and</span>
+<span class="sd">        if axis=-1 it will be the last dimension.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            sequence (Array of Tensors): Sequence of arrays</span>
+<span class="sd">            axis (Number): The axis along which to join the arrays</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            MXNet NDArray: ndarray comprised of the elements of the sequence.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">nd</span><span class="o">.</span><span class="n">stack</span><span class="p">(</span><span class="o">*</span><span class="n">sequence</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="n">axis</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="mxnet_backend.where"><a class="viewcode-back" href="../../../_generated/pyhf.tensor.mxnet_backend.mxnet_backend.html#pyhf.tensor.mxnet_backend.mxnet_backend.where">[docs]</a>    <span class="k">def</span> <span class="nf">where</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mask</span><span class="p">,</span> <span class="n">tensor_in_1</span><span class="p">,</span> <span class="n">tensor_in_2</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Apply a boolean selection mask to the elements of the input tensors.</span>
+
+<span class="sd">        Example:</span>
+
+<span class="sd">            &gt;&gt;&gt; import pyhf</span>
+<span class="sd">            &gt;&gt;&gt; pyhf.set_backend(pyhf.tensor.mxnet_backend())</span>
+<span class="sd">            &gt;&gt;&gt; pyhf.tensorlib.where(</span>
+<span class="sd">            ...   pyhf.tensorlib.astensor([1, 0, 1]),</span>
+<span class="sd">            ...   pyhf.tensorlib.astensor([1, 1, 1]),</span>
+<span class="sd">            ...   pyhf.tensorlib.astensor([2, 2, 2]))</span>
+<span class="sd">            ...</span>
+<span class="sd">            &lt;BLANKLINE&gt;</span>
+<span class="sd">            [1. 2. 1.]</span>
+<span class="sd">            &lt;NDArray 3 @cpu(0)&gt;</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            mask (bool): Boolean mask (boolean or tensor object of booleans)</span>
+<span class="sd">            tensor_in_1 (Tensor): Tensor object</span>
+<span class="sd">            tensor_in_2 (Tensor): Tensor object</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            MXNet NDArray: The result of the mask being applied to the tensors.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">mask</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">astensor</span><span class="p">(</span><span class="n">mask</span><span class="p">)</span>
+        <span class="n">tensor_in_1</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">astensor</span><span class="p">(</span><span class="n">tensor_in_1</span><span class="p">)</span>
+        <span class="n">tensor_in_2</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">astensor</span><span class="p">(</span><span class="n">tensor_in_2</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">nd</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
+            <span class="n">nd</span><span class="o">.</span><span class="n">multiply</span><span class="p">(</span><span class="n">mask</span><span class="p">,</span> <span class="n">tensor_in_1</span><span class="p">),</span>
+            <span class="n">nd</span><span class="o">.</span><span class="n">multiply</span><span class="p">(</span><span class="n">nd</span><span class="o">.</span><span class="n">subtract</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">mask</span><span class="p">),</span> <span class="n">tensor_in_2</span><span class="p">),</span>
+        <span class="p">)</span></div>
+
+<div class="viewcode-block" id="mxnet_backend.concatenate"><a class="viewcode-back" href="../../../_generated/pyhf.tensor.mxnet_backend.mxnet_backend.html#pyhf.tensor.mxnet_backend.mxnet_backend.concatenate">[docs]</a>    <span class="k">def</span> <span class="nf">concatenate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sequence</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Join the elements of the sequence.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            sequence (Array of Tensors): The sequence of arrays to join</span>
+<span class="sd">            axis: dimension along which to concatenate</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            MXNet NDArray: The ndarray of the joined elements.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">nd</span><span class="o">.</span><span class="n">concat</span><span class="p">(</span><span class="o">*</span><span class="n">sequence</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="n">axis</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="mxnet_backend.simple_broadcast"><a class="viewcode-back" href="../../../_generated/pyhf.tensor.mxnet_backend.mxnet_backend.html#pyhf.tensor.mxnet_backend.mxnet_backend.simple_broadcast">[docs]</a>    <span class="k">def</span> <span class="nf">simple_broadcast</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Broadcast a sequence of 1 dimensional arrays.</span>
+
+<span class="sd">        Example:</span>
+
+<span class="sd">            &gt;&gt;&gt; import pyhf</span>
+<span class="sd">            &gt;&gt;&gt; pyhf.set_backend(pyhf.tensor.mxnet_backend())</span>
+<span class="sd">            &gt;&gt;&gt; pyhf.tensorlib.simple_broadcast(</span>
+<span class="sd">            ...   pyhf.tensorlib.astensor([1]),</span>
+<span class="sd">            ...   pyhf.tensorlib.astensor([2, 3, 4]),</span>
+<span class="sd">            ...   pyhf.tensorlib.astensor([5, 6, 7]))</span>
+<span class="sd">            &lt;BLANKLINE&gt;</span>
+<span class="sd">            [[1. 1. 1.]</span>
+<span class="sd">             [2. 3. 4.]</span>
+<span class="sd">             [5. 6. 7.]]</span>
+<span class="sd">            &lt;NDArray 3x3 @cpu(0)&gt;</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            args (Array of Tensors): Sequence of arrays</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            MXNet NDArray: The sequence broadcast together.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">args</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">astensor</span><span class="p">(</span><span class="n">arg</span><span class="p">)</span> <span class="k">for</span> <span class="n">arg</span> <span class="ow">in</span> <span class="n">args</span><span class="p">]</span>
+        <span class="n">max_dim</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="nb">len</span><span class="p">,</span> <span class="n">args</span><span class="p">))</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">assert</span> <span class="nb">len</span><span class="p">([</span><span class="n">arg</span> <span class="k">for</span> <span class="n">arg</span> <span class="ow">in</span> <span class="n">args</span> <span class="k">if</span> <span class="mi">1</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">arg</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">max_dim</span><span class="p">])</span> <span class="o">==</span> <span class="mi">0</span>
+        <span class="k">except</span> <span class="ne">AssertionError</span> <span class="k">as</span> <span class="n">error</span><span class="p">:</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">error</span><span class="p">(</span>
+                <span class="s1">&#39;ERROR: The arguments must be of compatible size: 1 or </span><span class="si">%i</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">max_dim</span>
+            <span class="p">)</span>
+            <span class="k">raise</span> <span class="n">error</span>
+
+        <span class="n">broadcast</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="n">arg</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">arg</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span>
+            <span class="k">else</span> <span class="n">nd</span><span class="o">.</span><span class="n">broadcast_axis</span><span class="p">(</span><span class="n">arg</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">axis</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">arg</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="n">max_dim</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">arg</span> <span class="ow">in</span> <span class="n">args</span>
+        <span class="p">]</span>
+        <span class="k">return</span> <span class="n">nd</span><span class="o">.</span><span class="n">stack</span><span class="p">(</span><span class="o">*</span><span class="n">broadcast</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="mxnet_backend.shape"><a class="viewcode-back" href="../../../_generated/pyhf.tensor.mxnet_backend.mxnet_backend.html#pyhf.tensor.mxnet_backend.mxnet_backend.shape">[docs]</a>    <span class="k">def</span> <span class="nf">shape</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tensor</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        NB: Returns a tuple of longs</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">tensor</span><span class="o">.</span><span class="n">shape</span></div>
+
+<div class="viewcode-block" id="mxnet_backend.reshape"><a class="viewcode-back" href="../../../_generated/pyhf.tensor.mxnet_backend.mxnet_backend.html#pyhf.tensor.mxnet_backend.mxnet_backend.reshape">[docs]</a>    <span class="k">def</span> <span class="nf">reshape</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tensor</span><span class="p">,</span> <span class="n">newshape</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">nd</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">tensor</span><span class="p">,</span> <span class="n">newshape</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="mxnet_backend.einsum"><a class="viewcode-back" href="../../../_generated/pyhf.tensor.mxnet_backend.mxnet_backend.html#pyhf.tensor.mxnet_backend.mxnet_backend.einsum">[docs]</a>    <span class="k">def</span> <span class="nf">einsum</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">subscripts</span><span class="p">,</span> <span class="o">*</span><span class="n">operands</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        A generalized contraction between tensors of arbitrary dimension.</span>
+
+<span class="sd">        Warning: not implemented in MXNet</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            subscripts: str, specifies the subscripts for summation</span>
+<span class="sd">            operands: list of array_like, these are the tensors for the operation</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            tensor: the calculation based on the Einstein summation convention</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;mxnet::einsum is not implemented.&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">astensor</span><span class="p">([])</span></div>
+
+<div class="viewcode-block" id="mxnet_backend.poisson_logpdf"><a class="viewcode-back" href="../../../_generated/pyhf.tensor.mxnet_backend.mxnet_backend.html#pyhf.tensor.mxnet_backend.mxnet_backend.poisson_logpdf">[docs]</a>    <span class="k">def</span> <span class="nf">poisson_logpdf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">lam</span><span class="p">):</span>
+        <span class="n">n</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">astensor</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
+        <span class="n">lam</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">astensor</span><span class="p">(</span><span class="n">lam</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">n</span> <span class="o">*</span> <span class="n">nd</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">lam</span><span class="p">)</span> <span class="o">-</span> <span class="n">lam</span> <span class="o">-</span> <span class="n">nd</span><span class="o">.</span><span class="n">gammaln</span><span class="p">(</span><span class="n">n</span> <span class="o">+</span> <span class="mf">1.0</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="mxnet_backend.poisson"><a class="viewcode-back" href="../../../_generated/pyhf.tensor.mxnet_backend.mxnet_backend.html#pyhf.tensor.mxnet_backend.mxnet_backend.poisson">[docs]</a>    <span class="k">def</span> <span class="nf">poisson</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">lam</span><span class="p">):</span>
+        <span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        The continous approximation, using :math:`n! = \Gamma\left(n+1\right)`,</span>
+<span class="sd">        to the probability mass function of the Poisson distribution evaluated</span>
+<span class="sd">        at :code:`n` given the parameter :code:`lam`.</span>
+
+<span class="sd">        Example:</span>
+
+<span class="sd">            &gt;&gt;&gt; import pyhf</span>
+<span class="sd">            &gt;&gt;&gt; pyhf.set_backend(pyhf.tensor.mxnet_backend())</span>
+<span class="sd">            &gt;&gt;&gt; pyhf.tensorlib.poisson(5., 6.)</span>
+<span class="sd">            &lt;BLANKLINE&gt;</span>
+<span class="sd">            [0.16062315]</span>
+<span class="sd">            &lt;NDArray 1 @cpu(0)&gt;</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            n (Number or Tensor): The value at which to evaluate the approximation to the Poisson distribution p.m.f.</span>
+<span class="sd">                                  (the observed number of events)</span>
+<span class="sd">            lam (Number or Tensor): The mean of the Poisson distribution p.d.f.</span>
+<span class="sd">                                    (the expected number of events)</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            MXNet NDArray: Value of the continous approximation to Poisson(n|lam)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">n</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">astensor</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
+        <span class="n">lam</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">astensor</span><span class="p">(</span><span class="n">lam</span><span class="p">)</span>
+
+        <span class="c1"># This is currently copied directly from PyTorch&#39;s source until a better</span>
+        <span class="c1"># way can be found to do this in MXNet</span>
+        <span class="c1"># https://github.com/pytorch/pytorch/blob/39520ffec15ab7e97691fed048de1832e83785e8/torch/distributions/poisson.py#L59-L63</span>
+        <span class="k">return</span> <span class="n">nd</span><span class="o">.</span><span class="n">exp</span><span class="p">((</span><span class="n">nd</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">lam</span><span class="p">)</span> <span class="o">*</span> <span class="n">n</span><span class="p">)</span> <span class="o">-</span> <span class="n">lam</span> <span class="o">-</span> <span class="n">nd</span><span class="o">.</span><span class="n">gammaln</span><span class="p">(</span><span class="n">n</span> <span class="o">+</span> <span class="mf">1.0</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="mxnet_backend.normal_logpdf"><a class="viewcode-back" href="../../../_generated/pyhf.tensor.mxnet_backend.mxnet_backend.html#pyhf.tensor.mxnet_backend.mxnet_backend.normal_logpdf">[docs]</a>    <span class="k">def</span> <span class="nf">normal_logpdf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">mu</span><span class="p">,</span> <span class="n">sigma</span><span class="p">):</span>
+        <span class="c1"># This is currently copied directly from PyTorch&#39;s source until a better</span>
+        <span class="c1"># way can be found to do this in MXNet</span>
+        <span class="c1"># https://github.com/pytorch/pytorch/blob/39520ffec15ab7e97691fed048de1832e83785e8/torch/distributions/normal.py#L70-L76</span>
+        <span class="n">variance</span> <span class="o">=</span> <span class="n">sigma</span> <span class="o">**</span> <span class="mi">2</span>
+        <span class="n">log_scale</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">sigma</span><span class="p">)</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">sigma</span><span class="p">,</span> <span class="n">Number</span><span class="p">)</span> <span class="k">else</span> <span class="n">sigma</span><span class="o">.</span><span class="n">log</span><span class="p">()</span>
+        <span class="k">return</span> <span class="p">(</span>
+            <span class="o">-</span><span class="p">((</span><span class="n">x</span> <span class="o">-</span> <span class="n">mu</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">variance</span><span class="p">)</span>
+            <span class="o">-</span> <span class="n">log_scale</span>
+            <span class="o">-</span> <span class="n">math</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">math</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">math</span><span class="o">.</span><span class="n">pi</span><span class="p">))</span>
+        <span class="p">)</span></div>
+
+<div class="viewcode-block" id="mxnet_backend.normal"><a class="viewcode-back" href="../../../_generated/pyhf.tensor.mxnet_backend.mxnet_backend.html#pyhf.tensor.mxnet_backend.mxnet_backend.normal">[docs]</a>    <span class="k">def</span> <span class="nf">normal</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">mu</span><span class="p">,</span> <span class="n">sigma</span><span class="p">):</span>
+        <span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        The probability density function of the Normal distribution evaluated</span>
+<span class="sd">        at :code:`x` given parameters of mean of :code:`mu` and standard deviation</span>
+<span class="sd">        of :code:`sigma`.</span>
+
+<span class="sd">        Example:</span>
+
+<span class="sd">            &gt;&gt;&gt; import pyhf</span>
+<span class="sd">            &gt;&gt;&gt; pyhf.set_backend(pyhf.tensor.mxnet_backend())</span>
+<span class="sd">            &gt;&gt;&gt; pyhf.tensorlib.normal(0.5, 0., 1.)</span>
+<span class="sd">            &lt;BLANKLINE&gt;</span>
+<span class="sd">            [0.35206532]</span>
+<span class="sd">            &lt;NDArray 1 @cpu(0)&gt;</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            x (Number or Tensor): The value at which to evaluate the Normal distribution p.d.f.</span>
+<span class="sd">            mu (Number or Tensor): The mean of the Normal distribution</span>
+<span class="sd">            sigma (Number or Tensor): The standard deviation of the Normal distribution</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            MXNet NDArray: Value of Normal(x|mu, sigma).</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">astensor</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+        <span class="n">mu</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">astensor</span><span class="p">(</span><span class="n">mu</span><span class="p">)</span>
+        <span class="n">sigma</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">astensor</span><span class="p">(</span><span class="n">sigma</span><span class="p">)</span>
+
+        <span class="c1"># This is currently copied directly from PyTorch&#39;s source until a better</span>
+        <span class="c1"># way can be found to do this in MXNet</span>
+        <span class="c1"># https://github.com/pytorch/pytorch/blob/39520ffec15ab7e97691fed048de1832e83785e8/torch/distributions/normal.py#L70-L76</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">normal_logpdf</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">mu</span><span class="p">,</span> <span class="n">sigma</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="mxnet_backend.normal_cdf"><a class="viewcode-back" href="../../../_generated/pyhf.tensor.mxnet_backend.mxnet_backend.html#pyhf.tensor.mxnet_backend.mxnet_backend.normal_cdf">[docs]</a>    <span class="k">def</span> <span class="nf">normal_cdf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">mu</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">sigma</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        The cumulative distribution function for the Normal distribution</span>
+
+<span class="sd">        Example:</span>
+
+<span class="sd">            &gt;&gt;&gt; import pyhf</span>
+<span class="sd">            &gt;&gt;&gt; pyhf.set_backend(pyhf.tensor.mxnet_backend())</span>
+<span class="sd">            &gt;&gt;&gt; pyhf.tensorlib.normal_cdf(0.8)</span>
+<span class="sd">            &lt;BLANKLINE&gt;</span>
+<span class="sd">            [0.7881446]</span>
+<span class="sd">            &lt;NDArray 1 @cpu(0)&gt;</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            x (`tensor` or `float`): The observed value of the random variable to evaluate the CDF for</span>
+<span class="sd">            mu (`tensor` or `float`): The mean of the Normal distribution</span>
+<span class="sd">            sigma (`tensor` or `float`): The standard deviation of the Normal distribution</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            MXNet NDArray: The CDF</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+            <span class="s1">&#39;normal_cdf currently uses SciPy stats until pure MXNet distribuiton support is available.&#39;</span>
+        <span class="p">)</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">astensor</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">.</span><span class="n">asnumpy</span><span class="p">()</span>
+        <span class="n">mu</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">astensor</span><span class="p">(</span><span class="n">mu</span><span class="p">)</span><span class="o">.</span><span class="n">asnumpy</span><span class="p">()</span>
+        <span class="n">sigma</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">astensor</span><span class="p">(</span><span class="n">sigma</span><span class="p">)</span><span class="o">.</span><span class="n">asnumpy</span><span class="p">()</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">astensor</span><span class="p">(</span><span class="n">norm</span><span class="o">.</span><span class="n">cdf</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">loc</span><span class="o">=</span><span class="n">mu</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="n">sigma</span><span class="p">))</span></div></div>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2018, Lukas Heinrich, Matthew Feickert, Giordon Stark
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+        <script type="text/javascript" src="../../../_static/jquery.js"></script>
+        <script type="text/javascript" src="../../../_static/underscore.js"></script>
+        <script type="text/javascript" src="../../../_static/doctools.js"></script>
+        <script type="text/javascript" src="../../../_static/language_data.js"></script>
+        <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+        <script type="text/x-mathjax-config">MathJax.Hub.Config({"tex2jax": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true, "ignoreClass": "document", "processClass": "math|output_area"}})</script>
+    
+
+  
+
+  <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

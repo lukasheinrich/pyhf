@@ -1,0 +1,50 @@
+:github_url: https://github.com/diana-hep/pyhf/blob/master/pyhf/tensor/mxnet_backend
+
+mxnet\_backend
+==============
+
+.. currentmodule:: pyhf.tensor.mxnet_backend
+
+.. autoclass:: mxnet_backend
+   :show-inheritance:
+
+   
+   
+   
+
+   
+   
+   .. rubric:: Methods
+
+   
+   .. automethod:: mxnet_backend.__init__
+   .. automethod:: mxnet_backend.abs
+   .. automethod:: mxnet_backend.astensor
+   .. automethod:: mxnet_backend.boolean_mask
+   .. automethod:: mxnet_backend.clip
+   .. automethod:: mxnet_backend.concatenate
+   .. automethod:: mxnet_backend.divide
+   .. automethod:: mxnet_backend.einsum
+   .. automethod:: mxnet_backend.exp
+   .. automethod:: mxnet_backend.gather
+   .. automethod:: mxnet_backend.log
+   .. automethod:: mxnet_backend.normal
+   .. automethod:: mxnet_backend.normal_cdf
+   .. automethod:: mxnet_backend.normal_logpdf
+   .. automethod:: mxnet_backend.ones
+   .. automethod:: mxnet_backend.outer
+   .. automethod:: mxnet_backend.poisson
+   .. automethod:: mxnet_backend.poisson_logpdf
+   .. automethod:: mxnet_backend.power
+   .. automethod:: mxnet_backend.product
+   .. automethod:: mxnet_backend.reshape
+   .. automethod:: mxnet_backend.shape
+   .. automethod:: mxnet_backend.simple_broadcast
+   .. automethod:: mxnet_backend.sqrt
+   .. automethod:: mxnet_backend.stack
+   .. automethod:: mxnet_backend.sum
+   .. automethod:: mxnet_backend.tolist
+   .. automethod:: mxnet_backend.where
+   .. automethod:: mxnet_backend.zeros
+   
+   

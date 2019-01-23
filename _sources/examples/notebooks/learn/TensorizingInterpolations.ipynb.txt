@@ -1,0 +1,1603 @@
+{
+ "cells": [
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "# Tensorizing Interpolators\n",
+    "\n",
+    "This notebook will introduce some tensor algebra concepts about being able to convert from calculations inside for-loops into a single calculation over the entire tensor. It is assumed that you have some familiarity with what interpolation functions are used for in `pyhf`.\n",
+    "\n",
+    "To get started, we'll load up some functions we wrote whose job is to generate sets of histograms and alphas that we will compute interpolations for. This allows us to generate random, structured input data that we can use to test the tensorized form of the interpolation function against the original one we wrote. For now, we will consider only the `numpy` backend for simplicity, but can replace `np` to `pyhf.tensorlib` to achieve identical functionality.\n",
+    "\n",
+    "The function `random_histosets_alphasets_pair` will produce a pair `(histogramsets, alphasets)` of histograms and alphas for those histograms that represents the type of input we wish to interpolate on."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 1,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "import numpy as np\n",
+    "\n",
+    "def random_histosets_alphasets_pair(nsysts = 150, nhistos_per_syst_upto = 300, nalphas = 1, nbins_upto = 1):\n",
+    "    def generate_shapes(histogramssets,alphasets):\n",
+    "        h_shape = [len(histogramssets),0,0,0]\n",
+    "        a_shape = (len(alphasets),max(map(len,alphasets)))\n",
+    "        for hs in histogramssets:\n",
+    "            h_shape[1] = max(h_shape[1],len(hs))\n",
+    "            for h in hs: \n",
+    "                h_shape[2] = max(h_shape[2],len(h))\n",
+    "                for sh in h:\n",
+    "                    h_shape[3] = max(h_shape[3],len(sh))\n",
+    "        return tuple(h_shape),a_shape\n",
+    "\n",
+    "    def filled_shapes(histogramssets,alphasets):\n",
+    "        # pad our shapes with NaNs\n",
+    "        histos, alphas = generate_shapes(histogramssets,alphasets)\n",
+    "        histos, alphas = np.ones(histos) * np.nan, np.ones(alphas) * np.nan\n",
+    "        for i,syst in enumerate(histogramssets):\n",
+    "            for j,sample in enumerate(syst):\n",
+    "                for k,variation in enumerate(sample):\n",
+    "                    histos[i,j,k,:len(variation)] = variation\n",
+    "        for i,alphaset in enumerate(alphasets):\n",
+    "            alphas[i,:len(alphaset)] = alphaset\n",
+    "        return histos,alphas\n",
+    "\n",
+    "    nsyst_histos = np.random.randint(1, 1+nhistos_per_syst_upto, size=nsysts)\n",
+    "    nhistograms = [np.random.randint(1, nbins_upto+1, size=n) for n in nsyst_histos]\n",
+    "    random_alphas = [np.random.uniform(-1, 1,size=nalphas) for n in nsyst_histos]\n",
+    "\n",
+    "    random_histogramssets = [ \n",
+    "        [# all histos affected by systematic $nh\n",
+    "            [# sample $i, systematic $nh\n",
+    "                np.random.uniform(10*i+j,10*i+j+1, size = nbin).tolist() for j in range(3)\n",
+    "            ] for i,nbin in enumerate(nh)\n",
+    "        ] for nh in nhistograms\n",
+    "    ]   \n",
+    "    h,a = filled_shapes(random_histogramssets,random_alphas)\n",
+    "    return h,a "
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "## The (slow) interpolations\n",
+    "\n",
+    "In all cases, the way we do interpolations is as follows:\n",
+    "\n",
+    "1. Loop over both the `histogramssets` and `alphasets` simultaneously (e.g. using python's `zip()`)\n",
+    "2. Loop over all histograms set in the set of histograms sets that correspond to the histograms affected by a given systematic\n",
+    "3. Loop over all of the alphas in the set of alphas\n",
+    "4. Loop over all the bins in the histogram sets simultaneously (e.g. using python's `zip()`)\n",
+    "5. Apply the interpolation across the same bin index\n",
+    "\n",
+    "This is already exhausting to think about, so let's put this in code form. Depending on the kind of interpolation being done, we'll pass in `func` as an argument to the top-level interpolation loop to switch between linear (`interpcode=0`) and non-linear (`interpcode=1`)."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 2,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "def interpolation_looper(histogramssets, alphasets, func):\n",
+    "    all_results = []\n",
+    "    for histoset, alphaset in zip(histogramssets, alphasets):\n",
+    "        all_results.append([])\n",
+    "        set_result = all_results[-1]\n",
+    "        for histo in histoset:\n",
+    "            set_result.append([])\n",
+    "            histo_result = set_result[-1]\n",
+    "            for alpha in alphaset:\n",
+    "                alpha_result = []\n",
+    "                for down,nom,up in zip(histo[0],histo[1],histo[2]):\n",
+    "                    v = func(down, nom, up, alpha)\n",
+    "                    alpha_result.append(v)\n",
+    "                histo_result.append(alpha_result)\n",
+    "    return all_results"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "And we can also define our linear and non-linear interpolations we'll consider in this notebook that we wish to tensorize."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 3,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "def interpolation_linear(histogramssets,alphasets):\n",
+    "    def summand(down, nom, up, alpha):\n",
+    "        delta_up = up - nom \n",
+    "        delta_down = nom - down\n",
+    "        if alpha > 0:\n",
+    "            delta =  delta_up*alpha\n",
+    "        else:\n",
+    "            delta =  delta_down*alpha\n",
+    "        return nom + delta\n",
+    "    return interpolation_looper(histogramssets, alphasets, summand)\n",
+    "\n",
+    "def interpolation_nonlinear(histogramssets,alphasets):\n",
+    "    def product(down, nom, up, alpha):\n",
+    "        delta_up = up/nom\n",
+    "        delta_down = down/nom\n",
+    "        if alpha > 0:\n",
+    "            delta =  delta_up**alpha\n",
+    "        else:\n",
+    "            delta =  delta_down**(-alpha)\n",
+    "        return nom*delta\n",
+    "    return interpolation_looper(histogramssets, alphasets, product)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "We will also define a helper function that allows us to pass in two functions we wish to compare the outputs for:"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 4,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "def compare_fns(func1, func2):\n",
+    "    h,a = random_histosets_alphasets_pair()\n",
+    "\n",
+    "    def _func_runner(func, histssets, alphasets):\n",
+    "        return np.asarray(func(histssets,alphasets))\n",
+    "    \n",
+    "    old = _func_runner(func1, h, a)    \n",
+    "    new = _func_runner(func2, h, a)\n",
+    "\n",
+    "    return (np.all(old[~np.isnan(old)] == new[~np.isnan(new)]), (h,a))"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "For the rest of the notebook, we will detail in explicit form how the linear interpolator gets tensorized, step-by-step. The same sequence of steps will be shown for the non-linear interpolator -- but it is left up to the reader to understand the steps."
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "### Tensorizing the Linear Interpolator\n",
+    "\n",
+    "#### Step 0\n",
+    "\n",
+    "Step 0 requires converting the innermost conditional check on `alpha > 0` into something tensorizable. This also means the calculation itself is going to become tensorized. So we will convert from\n",
+    "\n",
+    "```python\n",
+    "    if alpha > 0:\n",
+    "        delta =  delta_up*alpha\n",
+    "    else:\n",
+    "        delta =  delta_down*alpha\n",
+    "```\n",
+    "\n",
+    "to\n",
+    "\n",
+    "```python\n",
+    "    delta = np.where(alpha > 0, delta_up*alpha, delta_down*alpha)\n",
+    "```\n",
+    "\n",
+    "Let's make that change now, and let's check to make sure we still do the calculation correctly."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 5,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "# get the internal calculation to use tensorlib backend\n",
+    "def new_interpolation_linear_step0(histogramssets,alphasets):\n",
+    "    all_results = []\n",
+    "    for histoset, alphaset in zip(histogramssets,alphasets):\n",
+    "        all_results.append([])\n",
+    "        set_result = all_results[-1]\n",
+    "        for histo in histoset:\n",
+    "            set_result.append([])\n",
+    "            histo_result = set_result[-1]\n",
+    "            for alpha in alphaset:\n",
+    "                alpha_result = []\n",
+    "                for down,nom,up in zip(histo[0],histo[1],histo[2]):\n",
+    "                    delta_up = up - nom\n",
+    "                    delta_down = nom - down\n",
+    "                    delta = np.where(alpha > 0, delta_up*alpha, delta_down*alpha)\n",
+    "                    v = nom + delta\n",
+    "                    alpha_result.append(v)\n",
+    "                histo_result.append(alpha_result)\n",
+    "    return all_results"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "And does the calculation still match?"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 6,
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "True\n"
+     ]
+    }
+   ],
+   "source": [
+    "result, (h,a) = compare_fns(interpolation_linear, new_interpolation_linear_step0)\n",
+    "print(result)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 7,
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "1 loop, best of 3: 182 ms per loop\n"
+     ]
+    }
+   ],
+   "source": [
+    "%%timeit\n",
+    "interpolation_linear(h,a)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 8,
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "1 loop, best of 3: 254 ms per loop\n"
+     ]
+    }
+   ],
+   "source": [
+    "%%timeit\n",
+    "new_interpolation_linear_step0(h,a)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "Great! We're a little bit slower right now, but that's expected. We're just getting started.\n",
+    "\n",
+    "#### Step 1\n",
+    "\n",
+    "In this step, we would like to remove the innermost `zip()` call over the histogram bins by calculating the interpolation between the histograms in one fell swoop. This means, instead of writing something like\n",
+    "\n",
+    "```python\n",
+    "for down,nom,up in zip(histo[0],histo[1],histo[2]):\n",
+    "    delta_up = up - nom\n",
+    "    ...\n",
+    "```\n",
+    "\n",
+    "one can instead write\n",
+    "\n",
+    "```python\n",
+    "delta_up = histo[2] - histo[1]\n",
+    "...\n",
+    "```\n",
+    "\n",
+    "taking advantage of the automatic broadcasting of operations on input tensors. This sort of feature of the tensor backends allows us to speed up code, such as interpolation. "
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 9,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "# update the delta variations to remove the zip() call and remove most-nested loop\n",
+    "def new_interpolation_linear_step1(histogramssets,alphasets):\n",
+    "    all_results = []\n",
+    "    for histoset, alphaset in zip(histogramssets,alphasets):\n",
+    "        all_results.append([])\n",
+    "        set_result = all_results[-1]\n",
+    "        for histo in histoset:\n",
+    "            set_result.append([])\n",
+    "            histo_result = set_result[-1]\n",
+    "            for alpha in alphaset:\n",
+    "                alpha_result = []\n",
+    "                deltas_up    = histo[2]-histo[1]\n",
+    "                deltas_dn    = histo[1]-histo[0]\n",
+    "                calc_deltas = np.where(alpha > 0, deltas_up*alpha, deltas_dn*alpha)\n",
+    "                v = histo[1] + calc_deltas\n",
+    "                alpha_result.append(v)\n",
+    "                histo_result.append(alpha_result)\n",
+    "    return all_results"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "And does the calculation still match?"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 10,
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "True\n"
+     ]
+    }
+   ],
+   "source": [
+    "result, (h,a) = compare_fns(interpolation_linear, new_interpolation_linear_step1)\n",
+    "print(result)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 11,
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "10 loops, best of 3: 182 ms per loop\n"
+     ]
+    }
+   ],
+   "source": [
+    "%%timeit\n",
+    "interpolation_linear(h,a)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 12,
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "1 loop, best of 3: 433 ms per loop\n"
+     ]
+    }
+   ],
+   "source": [
+    "%%timeit\n",
+    "new_interpolation_linear_step1(h,a)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "Great!\n",
+    "\n",
+    "#### Step 2\n",
+    "\n",
+    "In this step, we would like to move the giant array of the deltas calculated to the beginning -- outside of all loops -- and then only take a subset of it for the calculation itself. This allows us to figure out the entire structure of the input for the rest of the calculations as we slowly move towards including `einsum()` calls (einstein summation). This means we would like to go from\n",
+    "\n",
+    "\n",
+    "```python\n",
+    "for histo in histoset:\n",
+    "    delta_up = histo[2] - histo[1]\n",
+    "...\n",
+    "```\n",
+    "\n",
+    "to\n",
+    "\n",
+    "```python\n",
+    "all_deltas = ...\n",
+    "for nh, histo in enumerate(histoset):\n",
+    "    deltas = all_deltas[nh]\n",
+    "    ...\n",
+    "```\n",
+    "\n",
+    "Again, we are taking advantage of the automatic broadcasting of operations on input tensors to calculate all the deltas in a single action."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 13,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "# figure out the giant array of all deltas at the beginning and only take subsets of it for the calculation\n",
+    "def new_interpolation_linear_step2(histogramssets,alphasets):\n",
+    "    all_results    = []\n",
+    "    \n",
+    "    allset_all_histo_deltas_up = histogramssets[:,:,2] - histogramssets[:,:,1]\n",
+    "    allset_all_histo_deltas_dn = histogramssets[:,:,1] - histogramssets[:,:,0]\n",
+    "    \n",
+    "    for nset,(histoset, alphaset) in enumerate(zip(histogramssets,alphasets)):\n",
+    "        set_result = []\n",
+    "        \n",
+    "        all_histo_deltas_up = allset_all_histo_deltas_up[nset]\n",
+    "        all_histo_deltas_dn = allset_all_histo_deltas_dn[nset]\n",
+    "        \n",
+    "        for nh,histo in enumerate(histoset):\n",
+    "            alpha_deltas = []\n",
+    "            for alpha in alphaset:\n",
+    "                alpha_result = []\n",
+    "                deltas_up    = all_histo_deltas_up[nh]\n",
+    "                deltas_dn    = all_histo_deltas_dn[nh]\n",
+    "                calc_deltas  = np.where(alpha > 0, deltas_up*alpha, deltas_dn*alpha)\n",
+    "                alpha_deltas.append(calc_deltas)\n",
+    "            set_result.append([histo[1]+ d for d in alpha_deltas])\n",
+    "        all_results.append(set_result)\n",
+    "    return all_results"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "And does the calculation still match?"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 14,
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "True\n"
+     ]
+    }
+   ],
+   "source": [
+    "result, (h,a) = compare_fns(interpolation_linear, new_interpolation_linear_step2)\n",
+    "print(result)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 15,
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "1 loop, best of 3: 176 ms per loop\n"
+     ]
+    }
+   ],
+   "source": [
+    "%%timeit\n",
+    "interpolation_linear(h,a)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 16,
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "1 loop, best of 3: 376 ms per loop\n"
+     ]
+    }
+   ],
+   "source": [
+    "%%timeit\n",
+    "new_interpolation_linear_step2(h,a)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "Great!\n",
+    "\n",
+    "#### Step 3\n",
+    "\n",
+    "In this step, we get to introduce einstein summation to generalize the calculations we perform across many dimensions in a more concise, straightforward way. See [this blog post](https://rockt.github.io/2018/04/30/einsum) for some more details on einstein summation notation. In short, it allows us to write\n",
+    "\n",
+    "$$\n",
+    "c_j = \\sum_i \\sum_k = A_{ik} B_{kj} \\qquad \\rightarrow \\qquad \\texttt{einsum(\"ij,jk->i\", A, B)}\n",
+    "$$\n",
+    "\n",
+    "in a much more elegant way to express many kinds of common tensor operations such as dot products, transposes, outer products, and so on. This step is generally the hardest as one needs to figure out the corresponding `einsum` that keeps the calculation preserved (and matching). To some extent it requires a lot of trial and error until you get a feel for how einstein summation notation works.\n",
+    "\n",
+    "As a concrete example of a conversion, we wish to go from something like\n",
+    "\n",
+    "```python\n",
+    "for nh,histo in enumerate(histoset):\n",
+    "    for alpha in alphaset:\n",
+    "        deltas_up    = all_histo_deltas_up[nh]\n",
+    "        deltas_dn    = all_histo_deltas_dn[nh]\n",
+    "        calc_deltas  = np.where(alpha > 0, deltas_up*alpha, deltas_dn*alpha)\n",
+    "        ...\n",
+    "```\n",
+    "\n",
+    "to get rid of the loop over `alpha`\n",
+    "\n",
+    "```python\n",
+    "for nh,histo in enumerate(histoset):\n",
+    "    alphas_times_deltas_up = np.einsum('i,j->ij',alphaset,all_histo_deltas_up[nh])\n",
+    "    alphas_times_deltas_dn = np.einsum('i,j->ij',alphaset,all_histo_deltas_dn[nh])\n",
+    "    masks = np.einsum('i,j->ij',alphaset > 0,np.ones_like(all_histo_deltas_dn[nh]))\n",
+    "\n",
+    "    alpha_deltas  = np.where(masks,alphas_times_deltas_up, alphas_times_deltas_dn)\n",
+    "    ...\n",
+    "```\n",
+    "\n",
+    "In this particular case, we need an outer product that multiplies across the `alphaset` to the corresponding `histoset` for the up/down variations. Then we just need to select from either the up variation calculation or the down variation calculation based on the sign of alpha. Try to convince yourself that the einstein summation does what the for-loop does, but a little bit more concisely, and perhaps more clearly! How does the function look now?"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 17,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "# remove the loop over alphas, starts using einsum to help generalize to more dimensions\n",
+    "def new_interpolation_linear_step3(histogramssets,alphasets):\n",
+    "    all_results    = []\n",
+    "    \n",
+    "    allset_all_histo_deltas_up = histogramssets[:,:,2] - histogramssets[:,:,1]\n",
+    "    allset_all_histo_deltas_dn = histogramssets[:,:,1] - histogramssets[:,:,0]\n",
+    "    \n",
+    "    for nset,(histoset, alphaset) in enumerate(zip(histogramssets,alphasets)):\n",
+    "        set_result = []\n",
+    "        \n",
+    "        all_histo_deltas_up = allset_all_histo_deltas_up[nset]\n",
+    "        all_histo_deltas_dn = allset_all_histo_deltas_dn[nset]\n",
+    "        \n",
+    "        for nh,histo in enumerate(histoset):\n",
+    "            alphas_times_deltas_up = np.einsum('i,j->ij',alphaset,all_histo_deltas_up[nh])\n",
+    "            alphas_times_deltas_dn = np.einsum('i,j->ij',alphaset,all_histo_deltas_dn[nh])\n",
+    "            masks = np.einsum('i,j->ij',alphaset > 0,np.ones_like(all_histo_deltas_dn[nh]))\n",
+    "            \n",
+    "            alpha_deltas  = np.where(masks,alphas_times_deltas_up, alphas_times_deltas_dn)\n",
+    "            set_result.append([histo[1]+ d for d in alpha_deltas])\n",
+    "            \n",
+    "        all_results.append(set_result)\n",
+    "    return all_results"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "And does the calculation still match?"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 18,
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "True\n"
+     ]
+    }
+   ],
+   "source": [
+    "result, (h,a) = compare_fns(interpolation_linear, new_interpolation_linear_step3)\n",
+    "print(result)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 19,
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "1 loop, best of 3: 176 ms per loop\n"
+     ]
+    }
+   ],
+   "source": [
+    "%%timeit\n",
+    "interpolation_linear(h,a)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 20,
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "1 loop, best of 3: 786 ms per loop\n"
+     ]
+    }
+   ],
+   "source": [
+    "%%timeit\n",
+    "new_interpolation_linear_step3(h,a)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "Great! Note that we've been getting a little bit slower during these steps. It will all pay off in the end when we're fully tensorized! A lot of the internal steps are overkill with the heavy einstein summation and broadcasting at the moment, especially for how many loops in we are.\n",
+    "\n",
+    "#### Step 4\n",
+    "\n",
+    "Now in this step, we will move the einstein summations to the outer loop, so that we're calculating it once! This is the big step, but a little bit easier because all we're doing is adding extra dimensions into the calculation. The underlying calculation won't have changed. At this point, we'll also rename from `i` and `j` to `a` and `b` for `alpha` and `bin` (as in the bin in the histogram). To continue the notation as well, here's a summary of the dimensions involved:\n",
+    "\n",
+    "- `s` will be for the set under consideration (e.g. the modifier)\n",
+    "- `a` will be for the alpha variation\n",
+    "- `h` will be for the histogram affected by the modifier\n",
+    "- `b` will be for the bin of the histogram\n",
+    "\n",
+    "So we wish to move the `einsum` code from\n",
+    "\n",
+    "```python\n",
+    "for nset,(histoset, alphaset) in enumerate(zip(histogramssets,alphasets)):\n",
+    "    ...\n",
+    "\n",
+    "    for nh,histo in enumerate(histoset):\n",
+    "        alphas_times_deltas_up = np.einsum('i,j->ij',alphaset,all_histo_deltas_up[nh])\n",
+    "            ...\n",
+    "```\n",
+    "\n",
+    "to\n",
+    "\n",
+    "```python\n",
+    "all_alphas_times_deltas_up = np.einsum('...',alphaset,all_histo_deltas_up)\n",
+    "for nset,(histoset, alphaset) in enumerate(zip(histogramssets,alphasets)):\n",
+    "    ...\n",
+    "\n",
+    "    for nh,histo in enumerate(histoset):\n",
+    "        ...\n",
+    "```\n",
+    "\n",
+    "So how does this new function look?"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 21,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "# move the einsums to outer loops to get ready to get rid of all loops\n",
+    "def new_interpolation_linear_step4(histogramssets,alphasets):\n",
+    "    allset_all_histo_deltas_up = histogramssets[:,:,2] - histogramssets[:,:,1]\n",
+    "    allset_all_histo_deltas_dn = histogramssets[:,:,1] - histogramssets[:,:,0]\n",
+    "    allset_all_histo_nom = histogramssets[:,:,1]\n",
+    "    \n",
+    "    allsets_all_histos_alphas_times_deltas_up = np.einsum('sa,shb->shab',alphasets,allset_all_histo_deltas_up)\n",
+    "    allsets_all_histos_alphas_times_deltas_dn = np.einsum('sa,shb->shab',alphasets,allset_all_histo_deltas_dn)\n",
+    "    allsets_all_histos_masks = np.einsum('sa,s...u->s...au',alphasets > 0,np.ones_like(allset_all_histo_deltas_dn))\n",
+    "    \n",
+    "    allsets_all_histos_deltas = np.where(allsets_all_histos_masks,allsets_all_histos_alphas_times_deltas_up, allsets_all_histos_alphas_times_deltas_dn)\n",
+    "\n",
+    "    all_results    = []\n",
+    "    for nset,histoset in enumerate(histogramssets):\n",
+    "        all_histos_deltas = allsets_all_histos_deltas[nset]\n",
+    "        set_result = []\n",
+    "        for nh,histo in enumerate(histoset):\n",
+    "            set_result.append([d + histoset[nh,1] for d in all_histos_deltas[nh]])\n",
+    "        all_results.append(set_result)\n",
+    "    return all_results"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "And does the calculation still match?"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 22,
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "True\n"
+     ]
+    }
+   ],
+   "source": [
+    "result, (h,a) = compare_fns(interpolation_linear, new_interpolation_linear_step4)\n",
+    "print(result)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 23,
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "1 loop, best of 3: 185 ms per loop\n"
+     ]
+    }
+   ],
+   "source": [
+    "%%timeit\n",
+    "interpolation_linear(h,a)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 24,
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "10 loops, best of 3: 131 ms per loop\n"
+     ]
+    }
+   ],
+   "source": [
+    "%%timeit\n",
+    "new_interpolation_linear_step4(h,a)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "Great! And look at that huge speed up in time already, just from moving the multiple, heavy einstein summation calculations up through the loops. We still have some more optimizing to do as we still have explicit loops in our code. Let's keep at it, we're almost there!\n",
+    "\n",
+    "#### Step 5\n",
+    "\n",
+    "The hard part is mostly over. We have to now think about the nominal variations. Recall that we were trying to add the nominals to the deltas in order to compute the new value. In practice, we'll return the delta variation only, but we'll show you how to get rid of this last loop. In this case, we want to figure out how to change code like\n",
+    "\n",
+    "```python\n",
+    "all_results    = []\n",
+    "for nset,histoset in enumerate(histogramssets):\n",
+    "    all_histos_deltas = allsets_all_histos_deltas[nset]\n",
+    "    set_result = []\n",
+    "    for nh,histo in enumerate(histoset):\n",
+    "        set_result.append([d + histoset[nh,1] for d in all_histos_deltas[nh]])\n",
+    "    all_results.append(set_result)\n",
+    "```\n",
+    "\n",
+    "to get rid of that most-nested loop\n",
+    "\n",
+    "```python\n",
+    "all_results    = []\n",
+    "for nset,histoset in enumerate(histogramssets):\n",
+    "    # look ma, no more loops inside!\n",
+    "```\n",
+    "\n",
+    "So how does this look?"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 25,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "# slowly getting rid of our loops to build the right output tensor -- gotta think about nominals\n",
+    "def new_interpolation_linear_step5(histogramssets,alphasets):\n",
+    "    allset_all_histo_deltas_up = histogramssets[:,:,2] - histogramssets[:,:,1]\n",
+    "    allset_all_histo_deltas_dn = histogramssets[:,:,1] - histogramssets[:,:,0]\n",
+    "    allset_all_histo_nom = histogramssets[:,:,1]\n",
+    "    \n",
+    "    allsets_all_histos_alphas_times_deltas_up = np.einsum('sa,shb->shab',alphasets,allset_all_histo_deltas_up)\n",
+    "    allsets_all_histos_alphas_times_deltas_dn = np.einsum('sa,shb->shab',alphasets,allset_all_histo_deltas_dn)\n",
+    "    allsets_all_histos_masks = np.einsum('sa,s...u->s...au',alphasets > 0,np.ones_like(allset_all_histo_deltas_dn))\n",
+    "    \n",
+    "    allsets_all_histos_deltas = np.where(allsets_all_histos_masks,allsets_all_histos_alphas_times_deltas_up, allsets_all_histos_alphas_times_deltas_dn)\n",
+    "\n",
+    "    all_results    = []\n",
+    "    \n",
+    "    for nset,(_,alphaset) in enumerate(zip(histogramssets,alphasets)):\n",
+    "        all_histos_deltas = allsets_all_histos_deltas[nset]\n",
+    "        noms = histogramssets[nset,:,1]\n",
+    "        \n",
+    "        all_histos_noms_repeated = np.einsum('a,hn->han',np.ones_like(alphaset),noms)\n",
+    "\n",
+    "        set_result = all_histos_deltas + all_histos_noms_repeated\n",
+    "        all_results.append(set_result)\n",
+    "    return all_results"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "And does the calculation still match?"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 26,
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "True\n"
+     ]
+    }
+   ],
+   "source": [
+    "result, (h,a) = compare_fns(interpolation_linear, new_interpolation_linear_step5)\n",
+    "print(result)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 27,
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "1 loop, best of 3: 182 ms per loop\n"
+     ]
+    }
+   ],
+   "source": [
+    "%%timeit\n",
+    "interpolation_linear(h,a)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 28,
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "1000 loops, best of 3: 1.66 ms per loop\n"
+     ]
+    }
+   ],
+   "source": [
+    "%%timeit\n",
+    "new_interpolation_linear_step5(h,a)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "Fantastic! And look at the speed up. We're already faster than the for-loop and we're not even done yet.\n",
+    "\n",
+    "#### Step 6\n",
+    "\n",
+    "The final frontier. Also probably the best Star Wars episode. In any case, we have one more for-loop that needs to die in a slab of carbonite. This should be much easier now that you're more comfortable with tensor broadcasting and einstein summations.\n",
+    "\n",
+    "What does the function look like now?"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 30,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "def new_interpolation_linear_step6(histogramssets,alphasets):\n",
+    "    allset_allhisto_deltas_up = histogramssets[:,:,2] - histogramssets[:,:,1]\n",
+    "    allset_allhisto_deltas_dn = histogramssets[:,:,1] - histogramssets[:,:,0]\n",
+    "    allset_allhisto_nom = histogramssets[:,:,1]\n",
+    "    \n",
+    "    #x is dummy index\n",
+    "    \n",
+    "    allsets_allhistos_alphas_times_deltas_up = np.einsum('sa,shb->shab',alphasets,allset_allhisto_deltas_up)\n",
+    "    allsets_allhistos_alphas_times_deltas_dn = np.einsum('sa,shb->shab',alphasets,allset_allhisto_deltas_dn)\n",
+    "    allsets_allhistos_masks = np.einsum('sa,sxu->sxau',np.where(alphasets > 0, np.ones(alphasets.shape), np.zeros(alphasets.shape)),np.ones(allset_allhisto_deltas_dn.shape))\n",
+    "    \n",
+    "    allsets_allhistos_deltas = np.where(allsets_allhistos_masks,allsets_allhistos_alphas_times_deltas_up, allsets_allhistos_alphas_times_deltas_dn)\n",
+    "    allsets_allhistos_noms_repeated = np.einsum('sa,shb->shab',np.ones(alphasets.shape),allset_allhisto_nom)\n",
+    "    set_results = allsets_allhistos_deltas + allsets_allhistos_noms_repeated\n",
+    "    return set_results"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "And does the calculation still match?"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 31,
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "True\n"
+     ]
+    }
+   ],
+   "source": [
+    "result, (h,a) = compare_fns(interpolation_linear, new_interpolation_linear_step6)\n",
+    "print(result)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 32,
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "1 loop, best of 3: 194 ms per loop\n"
+     ]
+    }
+   ],
+   "source": [
+    "%%timeit\n",
+    "interpolation_linear(h,a)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 33,
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "1000 loops, best of 3: 435 µs per loop\n"
+     ]
+    }
+   ],
+   "source": [
+    "%%timeit\n",
+    "new_interpolation_linear_step6(h,a)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "And we're done tensorizing it. There are some more improvements that could be made to make this interpolation calculation even more robust -- but for now we're done.\n",
+    "\n",
+    "### Tensorizing the Non-Linear Interpolator\n",
+    "\n",
+    "This is very, very similar to what we've done for the case of the linear interpolator. As such, we will provide the resulting functions for each step, and you can see how things perform all the way at the bottom. Enjoy and learn at your own pace!"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 34,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "def interpolation_nonlinear(histogramssets,alphasets):\n",
+    "    all_results = []\n",
+    "    for histoset, alphaset in zip(histogramssets,alphasets):\n",
+    "        all_results.append([])\n",
+    "        set_result = all_results[-1]\n",
+    "        for histo in histoset:\n",
+    "            set_result.append([])\n",
+    "            histo_result = set_result[-1]\n",
+    "            for alpha in alphaset:\n",
+    "                alpha_result = []\n",
+    "                for down,nom,up in zip(histo[0],histo[1],histo[2]):\n",
+    "                    delta_up = up/nom\n",
+    "                    delta_down = down/nom\n",
+    "                    if alpha > 0:\n",
+    "                        delta =  delta_up**alpha\n",
+    "                    else:\n",
+    "                        delta =  delta_down**(-alpha)\n",
+    "                    v = nom*delta\n",
+    "                    alpha_result.append(v)\n",
+    "                histo_result.append(alpha_result)\n",
+    "    return all_results\n",
+    "\n",
+    "def new_interpolation_nonlinear_step0(histogramssets,alphasets):\n",
+    "    all_results = []\n",
+    "    for histoset, alphaset in zip(histogramssets,alphasets):\n",
+    "        all_results.append([])\n",
+    "        set_result = all_results[-1]\n",
+    "        for histo in histoset:\n",
+    "            set_result.append([])\n",
+    "            histo_result = set_result[-1]\n",
+    "            for alpha in alphaset:\n",
+    "                alpha_result = []\n",
+    "                for down,nom,up in zip(histo[0],histo[1],histo[2]):\n",
+    "                    delta_up = up/nom\n",
+    "                    delta_down = down/nom\n",
+    "                    delta = np.where(alpha > 0, np.power(delta_up, alpha), np.power(delta_down, np.abs(alpha)))\n",
+    "                    v = nom*delta\n",
+    "                    alpha_result.append(v)\n",
+    "                histo_result.append(alpha_result)\n",
+    "    return all_results\n",
+    "\n",
+    "def new_interpolation_nonlinear_step1(histogramssets,alphasets):\n",
+    "    all_results = []\n",
+    "    for histoset, alphaset in zip(histogramssets,alphasets):\n",
+    "        all_results.append([])\n",
+    "        set_result = all_results[-1]\n",
+    "        for histo in histoset:\n",
+    "            set_result.append([])\n",
+    "            histo_result = set_result[-1]\n",
+    "            for alpha in alphaset:\n",
+    "                alpha_result = []\n",
+    "                deltas_up = np.divide(histo[2], histo[1])\n",
+    "                deltas_down = np.divide(histo[0], histo[1])\n",
+    "                bases = np.where(alpha > 0, deltas_up, deltas_down)\n",
+    "                exponents = np.abs(alpha)\n",
+    "                calc_deltas = np.power(bases, exponents)\n",
+    "                v = histo[1] * calc_deltas\n",
+    "                alpha_result.append(v)\n",
+    "                histo_result.append(alpha_result)\n",
+    "    return all_results\n",
+    "\n",
+    "def new_interpolation_nonlinear_step2(histogramssets,alphasets):\n",
+    "    all_results    = []\n",
+    "    \n",
+    "    allset_all_histo_deltas_up = np.divide(histogramssets[:,:,2], histogramssets[:,:,1])\n",
+    "    allset_all_histo_deltas_dn = np.divide(histogramssets[:,:,0], histogramssets[:,:,1])\n",
+    "    \n",
+    "    for nset,(histoset, alphaset) in enumerate(zip(histogramssets,alphasets)):\n",
+    "        set_result = []\n",
+    "        \n",
+    "        all_histo_deltas_up = allset_all_histo_deltas_up[nset]\n",
+    "        all_histo_deltas_dn = allset_all_histo_deltas_dn[nset]\n",
+    "        \n",
+    "        for nh,histo in enumerate(histoset):\n",
+    "            alpha_deltas = []\n",
+    "            for alpha in alphaset:\n",
+    "                alpha_result = []\n",
+    "                deltas_up = all_histo_deltas_up[nh]\n",
+    "                deltas_down = all_histo_deltas_dn[nh]\n",
+    "                bases = np.where(alpha > 0, deltas_up, deltas_down)\n",
+    "                exponents = np.abs(alpha)\n",
+    "                calc_deltas = np.power(bases, exponents)\n",
+    "                alpha_deltas.append(calc_deltas)\n",
+    "            set_result.append([histo[1]*d for d in alpha_deltas])\n",
+    "        all_results.append(set_result)\n",
+    "    return all_results\n",
+    "\n",
+    "def new_interpolation_nonlinear_step3(histogramssets,alphasets):\n",
+    "    all_results    = []\n",
+    "    \n",
+    "    allset_all_histo_deltas_up = np.divide(histogramssets[:,:,2], histogramssets[:,:,1])\n",
+    "    allset_all_histo_deltas_dn = np.divide(histogramssets[:,:,0], histogramssets[:,:,1])\n",
+    "    \n",
+    "    for nset,(histoset, alphaset) in enumerate(zip(histogramssets,alphasets)):\n",
+    "        set_result = []\n",
+    "        \n",
+    "        all_histo_deltas_up = allset_all_histo_deltas_up[nset]\n",
+    "        all_histo_deltas_dn = allset_all_histo_deltas_dn[nset]\n",
+    "        \n",
+    "        for nh,histo in enumerate(histoset):\n",
+    "            # bases and exponents need to have an outer product, to esentially tile or repeat over rows/cols\n",
+    "            bases_up = np.einsum('a,b->ab', np.ones(alphaset.shape), all_histo_deltas_up[nh])\n",
+    "            bases_dn = np.einsum('a,b->ab', np.ones(alphaset.shape), all_histo_deltas_dn[nh])\n",
+    "            exponents = np.einsum('a,b->ab', np.abs(alphaset), np.ones(all_histo_deltas_up[nh].shape))\n",
+    "\n",
+    "            masks = np.einsum('a,b->ab',alphaset > 0,np.ones(all_histo_deltas_dn[nh].shape))\n",
+    "            bases = np.where(masks, bases_up, bases_dn)\n",
+    "            alpha_deltas = np.power(bases, exponents)\n",
+    "            set_result.append([histo[1]*d for d in alpha_deltas])\n",
+    "            \n",
+    "        all_results.append(set_result)\n",
+    "    return all_results\n",
+    "\n",
+    "def new_interpolation_nonlinear_step4(histogramssets,alphasets):\n",
+    "    all_results    = []\n",
+    "\n",
+    "    allset_all_histo_nom = histogramssets[:,:,1]\n",
+    "    allset_all_histo_deltas_up = np.divide(histogramssets[:,:,2], allset_all_histo_nom)\n",
+    "    allset_all_histo_deltas_dn = np.divide(histogramssets[:,:,0], allset_all_histo_nom)\n",
+    "\n",
+    "    bases_up = np.einsum('sa,shb->shab', np.ones(alphasets.shape), allset_all_histo_deltas_up)\n",
+    "    bases_dn = np.einsum('sa,shb->shab', np.ones(alphasets.shape), allset_all_histo_deltas_dn)\n",
+    "    exponents = np.einsum('sa,shb->shab', np.abs(alphasets), np.ones(allset_all_histo_deltas_up.shape))\n",
+    "\n",
+    "    masks = np.einsum('sa,shb->shab',alphasets > 0,np.ones(allset_all_histo_deltas_up.shape))\n",
+    "    bases = np.where(masks, bases_up, bases_dn)\n",
+    "\n",
+    "    allsets_all_histos_deltas = np.power(bases, exponents)\n",
+    "    \n",
+    "    all_results    = []\n",
+    "    for nset,histoset in enumerate(histogramssets):\n",
+    "        all_histos_deltas = allsets_all_histos_deltas[nset]\n",
+    "        set_result = []\n",
+    "        for nh,histo in enumerate(histoset):\n",
+    "            set_result.append([histoset[nh,1]*d for d in all_histos_deltas[nh]])\n",
+    "        all_results.append(set_result)\n",
+    "    return all_results\n",
+    "\n",
+    "def new_interpolation_nonlinear_step5(histogramssets,alphasets):\n",
+    "    all_results    = []\n",
+    "\n",
+    "    allset_all_histo_nom = histogramssets[:,:,1]\n",
+    "    allset_all_histo_deltas_up = np.divide(histogramssets[:,:,2], allset_all_histo_nom)\n",
+    "    allset_all_histo_deltas_dn = np.divide(histogramssets[:,:,0], allset_all_histo_nom)\n",
+    "\n",
+    "    bases_up = np.einsum('sa,shb->shab', np.ones(alphasets.shape), allset_all_histo_deltas_up)\n",
+    "    bases_dn = np.einsum('sa,shb->shab', np.ones(alphasets.shape), allset_all_histo_deltas_dn)\n",
+    "    exponents = np.einsum('sa,shb->shab', np.abs(alphasets), np.ones(allset_all_histo_deltas_up.shape))\n",
+    "\n",
+    "    masks = np.einsum('sa,shb->shab',alphasets > 0,np.ones(allset_all_histo_deltas_up.shape))\n",
+    "    bases = np.where(masks, bases_up, bases_dn)\n",
+    "\n",
+    "    allsets_all_histos_deltas = np.power(bases, exponents)\n",
+    "    \n",
+    "    all_results    = []    \n",
+    "    for nset,(_,alphaset) in enumerate(zip(histogramssets,alphasets)):\n",
+    "        all_histos_deltas = allsets_all_histos_deltas[nset]\n",
+    "        noms = allset_all_histo_nom[nset]\n",
+    "        all_histos_noms_repeated = np.einsum('a,hn->han',np.ones_like(alphaset),noms)\n",
+    "        set_result = all_histos_deltas * all_histos_noms_repeated\n",
+    "        all_results.append(set_result)\n",
+    "    return all_results\n",
+    "\n",
+    "def new_interpolation_nonlinear_step6(histogramssets,alphasets):\n",
+    "    all_results    = []\n",
+    "\n",
+    "    allset_all_histo_nom = histogramssets[:,:,1]\n",
+    "    allset_all_histo_deltas_up = np.divide(histogramssets[:,:,2], allset_all_histo_nom)\n",
+    "    allset_all_histo_deltas_dn = np.divide(histogramssets[:,:,0], allset_all_histo_nom)\n",
+    "\n",
+    "    bases_up = np.einsum('sa,shb->shab', np.ones(alphasets.shape), allset_all_histo_deltas_up)\n",
+    "    bases_dn = np.einsum('sa,shb->shab', np.ones(alphasets.shape), allset_all_histo_deltas_dn)\n",
+    "    exponents = np.einsum('sa,shb->shab', np.abs(alphasets), np.ones(allset_all_histo_deltas_up.shape))\n",
+    "\n",
+    "    masks = np.einsum('sa,shb->shab',alphasets > 0,np.ones(allset_all_histo_deltas_up.shape))\n",
+    "    bases = np.where(masks, bases_up, bases_dn)\n",
+    "\n",
+    "    allsets_all_histos_deltas = np.power(bases, exponents)\n",
+    "    allsets_allhistos_noms_repeated = np.einsum('sa,shb->shab', np.ones(alphasets.shape), allset_all_histo_nom)\n",
+    "    set_results = allsets_all_histos_deltas * allsets_allhistos_noms_repeated\n",
+    "    return set_results"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 35,
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "True\n"
+     ]
+    }
+   ],
+   "source": [
+    "result, (h,a) = compare_fns(interpolation_nonlinear, new_interpolation_nonlinear_step0)\n",
+    "print(result)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 36,
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "1 loop, best of 3: 182 ms per loop\n"
+     ]
+    }
+   ],
+   "source": [
+    "%%timeit\n",
+    "interpolation_nonlinear(h,a)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 37,
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "1 loop, best of 3: 593 ms per loop\n"
+     ]
+    }
+   ],
+   "source": [
+    "%%timeit\n",
+    "new_interpolation_nonlinear_step0(h,a)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 38,
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "True\n"
+     ]
+    }
+   ],
+   "source": [
+    "result, (h,a) = compare_fns(interpolation_nonlinear, new_interpolation_nonlinear_step1)\n",
+    "print(result)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 39,
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "1 loop, best of 3: 185 ms per loop\n"
+     ]
+    }
+   ],
+   "source": [
+    "%%timeit\n",
+    "interpolation_nonlinear(h,a)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 40,
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "1 loop, best of 3: 545 ms per loop\n"
+     ]
+    }
+   ],
+   "source": [
+    "%%timeit\n",
+    "new_interpolation_nonlinear_step1(h,a)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 41,
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "True\n"
+     ]
+    }
+   ],
+   "source": [
+    "result, (h,a) = compare_fns(interpolation_nonlinear, new_interpolation_nonlinear_step2)\n",
+    "print(result)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 42,
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "1 loop, best of 3: 177 ms per loop\n"
+     ]
+    }
+   ],
+   "source": [
+    "%%timeit\n",
+    "interpolation_nonlinear(h,a)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 43,
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "1 loop, best of 3: 446 ms per loop\n"
+     ]
+    }
+   ],
+   "source": [
+    "%%timeit\n",
+    "new_interpolation_nonlinear_step2(h,a)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 44,
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "True\n"
+     ]
+    }
+   ],
+   "source": [
+    "result, (h,a) = compare_fns(interpolation_nonlinear, new_interpolation_nonlinear_step3)\n",
+    "print(result)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 45,
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "10 loops, best of 3: 181 ms per loop\n"
+     ]
+    }
+   ],
+   "source": [
+    "%%timeit\n",
+    "interpolation_nonlinear(h,a)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 46,
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "1 loop, best of 3: 1.27 s per loop\n"
+     ]
+    }
+   ],
+   "source": [
+    "%%timeit\n",
+    "new_interpolation_nonlinear_step3(h,a)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 47,
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "True\n"
+     ]
+    }
+   ],
+   "source": [
+    "result, (h,a) = compare_fns(interpolation_nonlinear, new_interpolation_nonlinear_step4)\n",
+    "print(result)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 48,
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "1 loop, best of 3: 167 ms per loop\n"
+     ]
+    }
+   ],
+   "source": [
+    "%%timeit\n",
+    "interpolation_nonlinear(h,a)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 49,
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "10 loops, best of 3: 128 ms per loop\n"
+     ]
+    }
+   ],
+   "source": [
+    "%%timeit\n",
+    "new_interpolation_nonlinear_step4(h,a)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 50,
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "True\n"
+     ]
+    }
+   ],
+   "source": [
+    "result, (h,a) = compare_fns(interpolation_nonlinear, new_interpolation_nonlinear_step5)\n",
+    "print(result)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 51,
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "10 loops, best of 3: 171 ms per loop\n"
+     ]
+    }
+   ],
+   "source": [
+    "%%timeit\n",
+    "interpolation_nonlinear(h,a)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 52,
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "100 loops, best of 3: 2.47 ms per loop\n"
+     ]
+    }
+   ],
+   "source": [
+    "%%timeit\n",
+    "new_interpolation_nonlinear_step5(h,a)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 53,
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "True\n"
+     ]
+    }
+   ],
+   "source": [
+    "result, (h,a) = compare_fns(interpolation_nonlinear, new_interpolation_nonlinear_step6)\n",
+    "print(result)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 54,
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "10 loops, best of 3: 192 ms per loop\n"
+     ]
+    }
+   ],
+   "source": [
+    "%%timeit\n",
+    "interpolation_nonlinear(h,a)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 55,
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "1000 loops, best of 3: 1.51 ms per loop\n"
+     ]
+    }
+   ],
+   "source": [
+    "%%timeit\n",
+    "new_interpolation_nonlinear_step6(h,a)"
+   ]
+  }
+ ],
+ "metadata": {
+  "kernelspec": {
+   "display_name": "Python 2",
+   "language": "python",
+   "name": "python2"
+  },
+  "language_info": {
+   "codemirror_mode": {
+    "name": "ipython",
+    "version": 2
+   },
+   "file_extension": ".py",
+   "mimetype": "text/x-python",
+   "name": "python",
+   "nbconvert_exporter": "python",
+   "pygments_lexer": "ipython2",
+   "version": "2.7.14"
+  }
+ },
+ "nbformat": 4,
+ "nbformat_minor": 2
+}

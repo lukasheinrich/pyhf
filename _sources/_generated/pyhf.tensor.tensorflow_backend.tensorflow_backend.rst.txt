@@ -1,0 +1,51 @@
+:github_url: https://github.com/diana-hep/pyhf/blob/master/pyhf/tensor/tensorflow_backend
+
+tensorflow\_backend
+===================
+
+.. currentmodule:: pyhf.tensor.tensorflow_backend
+
+.. autoclass:: tensorflow_backend
+   :show-inheritance:
+
+   
+   
+   
+
+   
+   
+   .. rubric:: Methods
+
+   
+   .. automethod:: tensorflow_backend.__init__
+   .. automethod:: tensorflow_backend.abs
+   .. automethod:: tensorflow_backend.astensor
+   .. automethod:: tensorflow_backend.boolean_mask
+   .. automethod:: tensorflow_backend.clip
+   .. automethod:: tensorflow_backend.concatenate
+   .. automethod:: tensorflow_backend.divide
+   .. automethod:: tensorflow_backend.einsum
+   .. automethod:: tensorflow_backend.exp
+   .. automethod:: tensorflow_backend.gather
+   .. automethod:: tensorflow_backend.isfinite
+   .. automethod:: tensorflow_backend.log
+   .. automethod:: tensorflow_backend.normal
+   .. automethod:: tensorflow_backend.normal_cdf
+   .. automethod:: tensorflow_backend.normal_logpdf
+   .. automethod:: tensorflow_backend.ones
+   .. automethod:: tensorflow_backend.outer
+   .. automethod:: tensorflow_backend.poisson
+   .. automethod:: tensorflow_backend.poisson_logpdf
+   .. automethod:: tensorflow_backend.power
+   .. automethod:: tensorflow_backend.product
+   .. automethod:: tensorflow_backend.reshape
+   .. automethod:: tensorflow_backend.shape
+   .. automethod:: tensorflow_backend.simple_broadcast
+   .. automethod:: tensorflow_backend.sqrt
+   .. automethod:: tensorflow_backend.stack
+   .. automethod:: tensorflow_backend.sum
+   .. automethod:: tensorflow_backend.tolist
+   .. automethod:: tensorflow_backend.where
+   .. automethod:: tensorflow_backend.zeros
+   
+   

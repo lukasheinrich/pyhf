@@ -1,0 +1,6 @@
+pyhf.default\_backend
+=====================
+
+.. currentmodule:: pyhf
+
+.. autodata:: default_backend

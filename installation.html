@@ -1,0 +1,349 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Installation &mdash; pyhf 0.0.15 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/github-fork-ribbon-css/0.2.2/gh-fork-ribbon.min.css" type="text/css" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Developing" href="development.html" />
+    <link rel="prev" title="Talks" href="talks.html" /> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="index.html" class="icon icon-home"> pyhf
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.0.15
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="examples.html">Examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="talks.html">Talks</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Installation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#install-latest-stable-release-from-pypi">Install latest stable release from PyPI…</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#with-numpy-backend">… with NumPy backend</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#with-tensorflow-backend">… with TensorFlow backend</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#with-pytorch-backend">… with PyTorch backend</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#with-mxnet-backend">… with MXNet backend</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#with-all-backends">… with all backends</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#install-latest-development-version-from-github">Install latest development version from GitHub…</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#id1">… with NumPy backend</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id2">… with TensorFlow backend</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id3">… with PyTorch backend</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id4">… with MXNet backend</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id5">… with all backends</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#updating-pyhf">Updating <code class="code docutils literal notranslate"><span class="pre">pyhf</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="development.html">Developing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="faq.html">FAQ</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api.html">API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="citations.html">Use and Citations</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">pyhf</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+      <li>Installation</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/installation.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  
+<style>
+/* CSS overrides for sphinx_rtd_theme */
+
+/* 24px margin */
+.nbinput.nblast,
+.nboutput.nblast {
+    margin-bottom: 19px;  /* padding has already 5px */
+}
+
+/* ... except between code cells! */
+.nblast + .nbinput {
+    margin-top: -19px;
+}
+
+.admonition > p:before {
+    margin-right: 4px;  /* make room for the exclamation icon */
+}
+
+/* Fix math alignment, see https://github.com/rtfd/sphinx_rtd_theme/pull/686 */
+.math {
+    text-align: unset;
+}
+</style>
+<div class="section" id="installation">
+<h1>Installation<a class="headerlink" href="#installation" title="Permalink to this headline">¶</a></h1>
+<p>To install, we suggest first setting up a <a class="reference external" href="https://packaging.python.org/tutorials/installing-packages/#creating-virtual-environments">virtual environment</a></p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">#</span> Python3
+<span class="go">python3 -m venv pyhf</span>
+</pre></div>
+</div>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">#</span> Python2
+<span class="go">virtualenv --python=$(which python) pyhf</span>
+</pre></div>
+</div>
+<p>and activating it</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">source pyhf/bin/activate</span>
+</pre></div>
+</div>
+<div class="section" id="install-latest-stable-release-from-pypi">
+<h2>Install latest stable release from <a class="reference external" href="https://pypi.org/project/pyhf/">PyPI</a>…<a class="headerlink" href="#install-latest-stable-release-from-pypi" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="with-numpy-backend">
+<h3>… with NumPy backend<a class="headerlink" href="#with-numpy-backend" title="Permalink to this headline">¶</a></h3>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">pip install pyhf</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="with-tensorflow-backend">
+<h3>… with TensorFlow backend<a class="headerlink" href="#with-tensorflow-backend" title="Permalink to this headline">¶</a></h3>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">pip install pyhf[tensorflow]</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="with-pytorch-backend">
+<h3>… with PyTorch backend<a class="headerlink" href="#with-pytorch-backend" title="Permalink to this headline">¶</a></h3>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">pip install pyhf[torch]</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="with-mxnet-backend">
+<h3>… with MXNet backend<a class="headerlink" href="#with-mxnet-backend" title="Permalink to this headline">¶</a></h3>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">pip install pyhf[mxnet]</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="with-all-backends">
+<h3>… with all backends<a class="headerlink" href="#with-all-backends" title="Permalink to this headline">¶</a></h3>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">pip install pyhf[tensorflow,torch,mxnet]</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="install-latest-development-version-from-github">
+<h2>Install latest development version from <a class="reference external" href="https://github.com/diana-hep/pyhf">GitHub</a>…<a class="headerlink" href="#install-latest-development-version-from-github" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="id1">
+<h3>… with NumPy backend<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h3>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">pip install --ignore-installed -U &quot;git+https://github.com/diana-hep/pyhf.git#egg=pyhf&quot;</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="id2">
+<h3>… with TensorFlow backend<a class="headerlink" href="#id2" title="Permalink to this headline">¶</a></h3>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">pip install --ignore-installed -U &quot;git+https://github.com/diana-hep/pyhf.git#egg=pyhf[tensorflow]&quot;</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="id3">
+<h3>… with PyTorch backend<a class="headerlink" href="#id3" title="Permalink to this headline">¶</a></h3>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">pip install --ignore-installed -U &quot;git+https://github.com/diana-hep/pyhf.git#egg=pyhf[torch]&quot;</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="id4">
+<h3>… with MXNet backend<a class="headerlink" href="#id4" title="Permalink to this headline">¶</a></h3>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">pip install --ignore-installed -U &quot;git+https://github.com/diana-hep/pyhf.git#egg=pyhf[mxnet]&quot;</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="id5">
+<h3>… with all backends<a class="headerlink" href="#id5" title="Permalink to this headline">¶</a></h3>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">pip install --ignore-installed -U &quot;git+https://github.com/diana-hep/pyhf.git#egg=pyhf[tensorflow,torch,mxnet]&quot;</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="updating-pyhf">
+<h2>Updating <code class="code docutils literal notranslate"><span class="pre">pyhf</span></code><a class="headerlink" href="#updating-pyhf" title="Permalink to this headline">¶</a></h2>
+<p>Rerun the installation command. As the upgrade flag, <code class="code docutils literal notranslate"><span class="pre">-U</span></code>, is used then the libraries will be updated.</p>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="development.html" class="btn btn-neutral float-right" title="Developing" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="talks.html" class="btn btn-neutral" title="Talks" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2018, Lukas Heinrich, Matthew Feickert, Giordon Stark
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script type="text/javascript" src="_static/jquery.js"></script>
+        <script type="text/javascript" src="_static/underscore.js"></script>
+        <script type="text/javascript" src="_static/doctools.js"></script>
+        <script type="text/javascript" src="_static/language_data.js"></script>
+        <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+        <script type="text/x-mathjax-config">MathJax.Hub.Config({"tex2jax": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true, "ignoreClass": "document", "processClass": "math|output_area"}})</script>
+    
+
+  
+
+  <script type="text/javascript" src="_static/js/theme.js"></script>
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

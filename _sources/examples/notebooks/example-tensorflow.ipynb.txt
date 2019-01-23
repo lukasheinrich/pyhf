@@ -1,0 +1,184 @@
+{
+ "cells": [
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "# TensorFlow"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 1,
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Populating the interactive namespace from numpy and matplotlib\n"
+     ]
+    }
+   ],
+   "source": [
+    "%pylab inline"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 2,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "import pyhf\n",
+    "from pyhf import Model\n",
+    "from pyhf.simplemodels import hepdata_like\n",
+    "import tensorflow as tf"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 45,
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "---\n",
+      "as tensorflow\n",
+      "-----\n",
+      "<class 'tensorflow.python.framework.ops.Tensor'> [-22.877851486206055]\n"
+     ]
+    },
+    {
+     "data": {
+      "text/plain": [
+       "<tensorflow.python.summary.writer.writer.FileWriter at 0x11fe1af90>"
+      ]
+     },
+     "execution_count": 45,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "source = {\n",
+    "  \"binning\": [2,-0.5,1.5],\n",
+    "  \"bindata\": {\n",
+    "    \"data\":    [120.0, 180.0],\n",
+    "    \"bkg\":     [100.0, 150.0],\n",
+    "    \"bkgerr\":     [10.0, 10.0],\n",
+    "    \"sig\":     [30.0, 95.0]\n",
+    "  }\n",
+    "}\n",
+    "\n",
+    "pdf  = hepdata_like(source['bindata']['sig'], source['bindata']['bkg'], source['bindata']['bkgerr'])\n",
+    "data = source['bindata']['data'] + pdf.config.auxdata\n",
+    "\n",
+    "init_pars = pdf.config.suggested_init()\n",
+    "par_bounds = pdf.config.suggested_bounds()\n",
+    "\n",
+    "\n",
+    "print '---\\nas tensorflow\\n-----'\n",
+    "import tensorflow as tf\n",
+    "pyhf.tensorlib = pyhf.tensorflow_backend()\n",
+    "v =  pdf.logpdf(init_pars,data)\n",
+    "\n",
+    "pyhf.tensorlib.session = tf.Session()\n",
+    "print type(v),pyhf.tensorlib.tolist(v)\n",
+    "\n",
+    "\n",
+    "import os\n",
+    "tf.summary.FileWriter(os.getcwd(), pyhf.tensorlib.session.graph)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 96,
+   "metadata": {
+    "scrolled": false
+   },
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "[array([[4.]], dtype=float32), array([[12.]], dtype=float32)]"
+      ]
+     },
+     "execution_count": 96,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "x = tf.Variable([1.])\n",
+    "y = tf.Variable([2.])\n",
+    "\n",
+    "z = x**2*y + y**3*x\n",
+    "\n",
+    "hessian = tf.hessians(z,[x,y])\n",
+    "\n",
+    "sess = tf.Session()\n",
+    "sess.run(tf.global_variables_initializer())\n",
+    "sess.run(hessian)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 99,
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "[array([[4.]]), array([[12.]])]"
+      ]
+     },
+     "execution_count": 99,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "x = tf.cast([1.], tf.float64)\n",
+    "y = tf.cast([2.], tf.float64)\n",
+    "\n",
+    "z = x**2*y + y**3*x\n",
+    "\n",
+    "hessian = tf.hessians(z,[x,y])\n",
+    "\n",
+    "sess = tf.Session()\n",
+    "sess.run(hessian)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": []
+  }
+ ],
+ "metadata": {
+  "kernelspec": {
+   "display_name": "Python 2",
+   "language": "python",
+   "name": "python2"
+  },
+  "language_info": {
+   "codemirror_mode": {
+    "name": "ipython",
+    "version": 2
+   },
+   "file_extension": ".py",
+   "mimetype": "text/x-python",
+   "name": "python",
+   "nbconvert_exporter": "python",
+   "pygments_lexer": "ipython2",
+   "version": "2.7.14"
+  }
+ },
+ "nbformat": 4,
+ "nbformat_minor": 2
+}

@@ -1,0 +1,373 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>pure-python fitting/limit-setting/interval estimation HistFactory-style &mdash; pyhf 0.0.15 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/github-fork-ribbon-css/0.2.2/gh-fork-ribbon.min.css" type="text/css" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Examples" href="examples.html" /> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="#" class="icon icon-home"> pyhf
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.0.15
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="examples.html">Examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="talks.html">Talks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="development.html">Developing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="faq.html">FAQ</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api.html">API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="citations.html">Use and Citations</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="#">pyhf</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="#">Docs</a> &raquo;</li>
+        
+      <li>pure-python fitting/limit-setting/interval estimation HistFactory-style</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/index.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  
+<style>
+/* CSS overrides for sphinx_rtd_theme */
+
+/* 24px margin */
+.nbinput.nblast,
+.nboutput.nblast {
+    margin-bottom: 19px;  /* padding has already 5px */
+}
+
+/* ... except between code cells! */
+.nblast + .nbinput {
+    margin-top: -19px;
+}
+
+.admonition > p:before {
+    margin-right: 4px;  /* make room for the exclamation icon */
+}
+
+/* Fix math alignment, see https://github.com/rtfd/sphinx_rtd_theme/pull/686 */
+.math {
+    text-align: unset;
+}
+</style>
+<div class="toctree-wrapper compound">
+</div>
+<a class="github-fork-ribbon right-top fixed" href="https://github.com/diana-hep/pyhf/fork" data-ribbon="Fork me on GitHub" title="Fork me on GitHub">Fork me on GitHub</a><div class="section" id="pure-python-fitting-limit-setting-interval-estimation-histfactory-style">
+<h1>pure-python fitting/limit-setting/interval estimation HistFactory-style<a class="headerlink" href="#pure-python-fitting-limit-setting-interval-estimation-histfactory-style" title="Permalink to this headline">¶</a></h1>
+<a class="reference external image-reference" href="https://doi.org/10.5281/zenodo.1169739"><img alt="DOI" src="https://zenodo.org/badge/DOI/10.5281/zenodo.1169739.svg" /></a>
+<a class="reference external image-reference" href="https://travis-ci.org/diana-hep/pyhf"><img alt="Build Status" src="https://travis-ci.org/diana-hep/pyhf.svg?branch=master" /></a>
+<a class="reference external image-reference" href="https://hub.docker.com/r/pyhf/pyhf/"><img alt="Docker Automated" src="https://img.shields.io/docker/automated/pyhf/pyhf.svg" /></a>
+<a class="reference external image-reference" href="https://coveralls.io/github/diana-hep/pyhf?branch=master"><img alt="Coverage Status" src="https://coveralls.io/repos/github/diana-hep/pyhf/badge.svg?branch=master" /></a>
+<a class="reference external image-reference" href="https://landscape.io/github/diana-hep/pyhf/master"><img alt="Code Health" src="https://landscape.io/github/diana-hep/pyhf/master/landscape.svg?style=flat" /></a>
+<a class="reference external image-reference" href="https://github.com/ambv/black"><img alt="Code style: black" src="https://img.shields.io/badge/code%20style-black-000000.svg" /></a>
+<a class="reference external image-reference" href="https://diana-hep.github.io/pyhf"><img alt="Docs" src="https://img.shields.io/badge/docs-master-blue.svg" /></a>
+<a class="reference external image-reference" href="https://mybinder.org/v2/gh/diana-hep/pyhf/master?filepath=docs%2Fexamples%2Fnotebooks%2Fbinderexample%2FStatisticalAnalysis.ipynb"><img alt="Binder" src="https://mybinder.org/badge.svg" /></a>
+<a class="reference external image-reference" href="https://badge.fury.io/py/pyhf"><img alt="PyPI version" src="https://badge.fury.io/py/pyhf.svg" /></a>
+<a class="reference external image-reference" href="https://hub.docker.com/r/pyhf/pyhf/"><img alt="Docker Stars" src="https://img.shields.io/docker/stars/pyhf/pyhf.svg" /></a>
+<a class="reference external image-reference" href="https://hub.docker.com/r/pyhf/pyhf/"><img alt="Docker Pulls" src="https://img.shields.io/docker/pulls/pyhf/pyhf.svg" /></a>
+<p>The HistFactory p.d.f. template [<a class="reference external" href="https://cds.cern.ch/record/1456844">CERN-OPEN-2012-016</a>] is per-se independent of its implementation in ROOT and sometimes, it’s useful to be able to run statistical analysis outside
+of ROOT, RooFit, RooStats framework.</p>
+<p>This repo is a pure-python implementation of that statistical model for multi-bin histogram-based analysis and its interval estimation is based on the asymptotic formulas of “Asymptotic formulae for likelihood-based tests of new physics” [<a class="reference external" href="https://arxiv.org/abs/1007.1727">arxiv:1007.1727</a>]. The aim is also to support modern computational graph libraries such as PyTorch and TensorFlow in order to make use of features such as autodifferentiation and GPU acceleration.</p>
+<div class="section" id="hello-world">
+<h2>Hello World<a class="headerlink" href="#hello-world" title="Permalink to this headline">¶</a></h2>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">pyhf</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pdf</span> <span class="o">=</span> <span class="n">pyhf</span><span class="o">.</span><span class="n">simplemodels</span><span class="o">.</span><span class="n">hepdata_like</span><span class="p">(</span><span class="n">signal_data</span><span class="o">=</span><span class="p">[</span><span class="mf">12.0</span><span class="p">,</span> <span class="mf">11.0</span><span class="p">],</span> <span class="n">bkg_data</span><span class="o">=</span><span class="p">[</span><span class="mf">50.0</span><span class="p">,</span> <span class="mf">52.0</span><span class="p">],</span> <span class="n">bkg_uncerts</span><span class="o">=</span><span class="p">[</span><span class="mf">3.0</span><span class="p">,</span> <span class="mf">7.0</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">CLs_obs</span><span class="p">,</span> <span class="n">CLs_exp</span> <span class="o">=</span> <span class="n">pyhf</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">hypotest</span><span class="p">(</span><span class="mf">1.0</span><span class="p">,</span> <span class="p">[</span><span class="mi">51</span><span class="p">,</span> <span class="mi">48</span><span class="p">]</span> <span class="o">+</span> <span class="n">pdf</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">auxdata</span><span class="p">,</span> <span class="n">pdf</span><span class="p">,</span> <span class="n">return_expected</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span><span class="p">(</span><span class="s1">&#39;Observed: {}, Expected: {}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">CLs_obs</span><span class="p">,</span> <span class="n">CLs_exp</span><span class="p">))</span>
+<span class="go">Observed: [0.05290116], Expected: [0.06445521]</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="what-does-it-support">
+<h2>What does it support<a class="headerlink" href="#what-does-it-support" title="Permalink to this headline">¶</a></h2>
+<p>Implemented variations:</p>
+<ul class="simple">
+<li>[x] HistoSys</li>
+<li>[x] OverallSys</li>
+<li>[x] ShapeSys</li>
+<li>[x] NormFactor</li>
+<li>[x] Multiple Channels</li>
+<li>[x] Import from XML + ROOT via <a class="reference external" href="https://github.com/scikit-hep/uproot">uproot</a></li>
+<li>[x] ShapeFactor</li>
+<li>[x] StatError</li>
+<li>[x] Lumi Uncertainty</li>
+</ul>
+<p>Computational Backends:</p>
+<ul class="simple">
+<li>[x] NumPy</li>
+<li>[x] PyTorch</li>
+<li>[x] TensorFlow</li>
+<li>[x] MXNet</li>
+</ul>
+<p>Available Optimizers</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="25%" />
+<col width="25%" />
+<col width="25%" />
+<col width="25%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">NumPy</th>
+<th class="head">Tensorflow</th>
+<th class="head">PyTorch</th>
+<th class="head">MxNet</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>SLSQP (<code class="docutils literal notranslate"><span class="pre">scipy.optimize</span></code>)</td>
+<td>Newton’s Method (autodiff)</td>
+<td>Newton’s Method (autodiff)</td>
+<td>N/A</td>
+</tr>
+<tr class="row-odd"><td>MINUIT (<code class="docutils literal notranslate"><span class="pre">iminuit</span></code>)</td>
+<td>.</td>
+<td>.</td>
+<td>.</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="todo">
+<h2>Todo<a class="headerlink" href="#todo" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li>[ ] StatConfig</li>
+<li>[ ] Non-asymptotic calculators</li>
+</ul>
+<p>results obtained from this package are validated against output computed from HistFactory workspaces</p>
+</div>
+<div class="section" id="a-one-bin-example">
+<h2>A one bin example<a class="headerlink" href="#a-one-bin-example" title="Permalink to this headline">¶</a></h2>
+<div class="highlight-guess notranslate"><div class="highlight"><pre><span></span>nobs = 55, b = 50, db = 7, nom_sig = 10.
+</pre></div>
+</div>
+<p><span class="raw-html-m2r"><img src="docs/_static/img/manual_1bin_55_50_7.png" alt="manual" width="500"/></span>
+<span class="raw-html-m2r"><img src="docs/_static/img/hfh_1bin_55_50_7.png" alt="manual" width="500"/></span></p>
+</div>
+<div class="section" id="a-two-bin-example">
+<h2>A two bin example<a class="headerlink" href="#a-two-bin-example" title="Permalink to this headline">¶</a></h2>
+<div class="highlight-guess notranslate"><div class="highlight"><pre><span></span>bin 1: nobs = 100, b = 100, db = 15., nom_sig = 30.
+bin 2: nobs = 145, b = 150, db = 20., nom_sig = 45.
+</pre></div>
+</div>
+<p><span class="raw-html-m2r"><img src="docs/_static/img/manual_2_bin_100.0_145.0_100.0_150.0_15.0_20.0_30.0_45.0.png" alt="manual" width="500"/></span>
+<span class="raw-html-m2r"><img src="docs/_static/img/hfh_2_bin_100.0_145.0_100.0_150.0_15.0_20.0_30.0_45.0.png" alt="manual" width="500"/></span></p>
+</div>
+<div class="section" id="installation">
+<h2>Installation<a class="headerlink" href="#installation" title="Permalink to this headline">¶</a></h2>
+<p>To install <code class="docutils literal notranslate"><span class="pre">pyhf</span></code> from PyPI with the NumPy backend run</p>
+<div class="highlight-guess notranslate"><div class="highlight"><pre><span></span>pip install pyhf
+</pre></div>
+</div>
+<p>and to install <code class="docutils literal notranslate"><span class="pre">pyhf</span></code> with additional backends run</p>
+<div class="highlight-guess notranslate"><div class="highlight"><pre><span></span>pip install pyhf[tensorflow,torch,mxnet]
+</pre></div>
+</div>
+<p>or a subset of the options.</p>
+<p>To uninstall run</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pip uninstall pyhf
+</pre></div>
+</div>
+</div>
+<div class="section" id="authors">
+<h2>Authors<a class="headerlink" href="#authors" title="Permalink to this headline">¶</a></h2>
+<p>Please check the <a class="reference external" href="https://github.com/lukasheinrich/pyhf/graphs/contributors">contribution statistics for a list of contributors</a></p>
+</div>
+</div>
+<div class="section" id="indices-and-tables">
+<h1>Indices and tables<a class="headerlink" href="#indices-and-tables" title="Permalink to this headline">¶</a></h1>
+<ul class="simple">
+<li><a class="reference internal" href="genindex.html"><span class="std std-ref">Index</span></a></li>
+<li><a class="reference internal" href="py-modindex.html"><span class="std std-ref">Module Index</span></a></li>
+<li><a class="reference internal" href="search.html"><span class="std std-ref">Search Page</span></a></li>
+</ul>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="examples.html" class="btn btn-neutral float-right" title="Examples" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2018, Lukas Heinrich, Matthew Feickert, Giordon Stark
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script type="text/javascript" src="_static/jquery.js"></script>
+        <script type="text/javascript" src="_static/underscore.js"></script>
+        <script type="text/javascript" src="_static/doctools.js"></script>
+        <script type="text/javascript" src="_static/language_data.js"></script>
+        <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+        <script type="text/x-mathjax-config">MathJax.Hub.Config({"tex2jax": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true, "ignoreClass": "document", "processClass": "math|output_area"}})</script>
+    
+
+  
+
+  <script type="text/javascript" src="_static/js/theme.js"></script>
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

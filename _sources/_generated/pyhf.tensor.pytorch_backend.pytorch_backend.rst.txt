@@ -1,0 +1,51 @@
+:github_url: https://github.com/diana-hep/pyhf/blob/master/pyhf/tensor/pytorch_backend
+
+pytorch\_backend
+================
+
+.. currentmodule:: pyhf.tensor.pytorch_backend
+
+.. autoclass:: pytorch_backend
+   :show-inheritance:
+
+   
+   
+   
+
+   
+   
+   .. rubric:: Methods
+
+   
+   .. automethod:: pytorch_backend.__init__
+   .. automethod:: pytorch_backend.abs
+   .. automethod:: pytorch_backend.astensor
+   .. automethod:: pytorch_backend.boolean_mask
+   .. automethod:: pytorch_backend.clip
+   .. automethod:: pytorch_backend.concatenate
+   .. automethod:: pytorch_backend.divide
+   .. automethod:: pytorch_backend.einsum
+   .. automethod:: pytorch_backend.exp
+   .. automethod:: pytorch_backend.gather
+   .. automethod:: pytorch_backend.isfinite
+   .. automethod:: pytorch_backend.log
+   .. automethod:: pytorch_backend.normal
+   .. automethod:: pytorch_backend.normal_cdf
+   .. automethod:: pytorch_backend.normal_logpdf
+   .. automethod:: pytorch_backend.ones
+   .. automethod:: pytorch_backend.outer
+   .. automethod:: pytorch_backend.poisson
+   .. automethod:: pytorch_backend.poisson_logpdf
+   .. automethod:: pytorch_backend.power
+   .. automethod:: pytorch_backend.product
+   .. automethod:: pytorch_backend.reshape
+   .. automethod:: pytorch_backend.shape
+   .. automethod:: pytorch_backend.simple_broadcast
+   .. automethod:: pytorch_backend.sqrt
+   .. automethod:: pytorch_backend.stack
+   .. automethod:: pytorch_backend.sum
+   .. automethod:: pytorch_backend.tolist
+   .. automethod:: pytorch_backend.where
+   .. automethod:: pytorch_backend.zeros
+   
+   

@@ -1,0 +1,22 @@
+:github_url: https://github.com/diana-hep/pyhf/blob/master/pyhf/interpolators
+
+code0
+=====
+
+.. currentmodule:: pyhf.interpolators
+
+.. autoclass:: code0
+   :show-inheritance:
+
+   
+   
+   
+
+   
+   
+   .. rubric:: Methods
+
+   
+   .. automethod:: code0.__init__
+   
+   

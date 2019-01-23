@@ -1,0 +1,6 @@
+pyhf.utils.loglambdav
+=====================
+
+.. currentmodule:: pyhf.utils
+
+.. autofunction:: loglambdav

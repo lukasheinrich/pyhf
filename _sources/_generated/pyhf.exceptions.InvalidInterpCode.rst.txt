@@ -1,0 +1,17 @@
+:github_url: https://github.com/diana-hep/pyhf/blob/master/pyhf/exceptions
+
+InvalidInterpCode
+=================
+
+.. currentmodule:: pyhf.exceptions
+
+.. autoclass:: InvalidInterpCode
+   :show-inheritance:
+
+   
+   
+   
+
+   
+   
+   

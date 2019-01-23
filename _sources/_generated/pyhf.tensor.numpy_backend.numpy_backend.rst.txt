@@ -1,0 +1,51 @@
+:github_url: https://github.com/diana-hep/pyhf/blob/master/pyhf/tensor/numpy_backend
+
+numpy\_backend
+==============
+
+.. currentmodule:: pyhf.tensor.numpy_backend
+
+.. autoclass:: numpy_backend
+   :show-inheritance:
+
+   
+   
+   
+
+   
+   
+   .. rubric:: Methods
+
+   
+   .. automethod:: numpy_backend.__init__
+   .. automethod:: numpy_backend.abs
+   .. automethod:: numpy_backend.astensor
+   .. automethod:: numpy_backend.boolean_mask
+   .. automethod:: numpy_backend.clip
+   .. automethod:: numpy_backend.concatenate
+   .. automethod:: numpy_backend.divide
+   .. automethod:: numpy_backend.einsum
+   .. automethod:: numpy_backend.exp
+   .. automethod:: numpy_backend.gather
+   .. automethod:: numpy_backend.isfinite
+   .. automethod:: numpy_backend.log
+   .. automethod:: numpy_backend.normal
+   .. automethod:: numpy_backend.normal_cdf
+   .. automethod:: numpy_backend.normal_logpdf
+   .. automethod:: numpy_backend.ones
+   .. automethod:: numpy_backend.outer
+   .. automethod:: numpy_backend.poisson
+   .. automethod:: numpy_backend.poisson_logpdf
+   .. automethod:: numpy_backend.power
+   .. automethod:: numpy_backend.product
+   .. automethod:: numpy_backend.reshape
+   .. automethod:: numpy_backend.shape
+   .. automethod:: numpy_backend.simple_broadcast
+   .. automethod:: numpy_backend.sqrt
+   .. automethod:: numpy_backend.stack
+   .. automethod:: numpy_backend.sum
+   .. automethod:: numpy_backend.tolist
+   .. automethod:: numpy_backend.where
+   .. automethod:: numpy_backend.zeros
+   
+   

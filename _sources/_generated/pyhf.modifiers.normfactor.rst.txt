@@ -1,0 +1,29 @@
+:github_url: https://github.com/diana-hep/pyhf/blob/master/pyhf/modifiers
+
+normfactor
+==========
+
+.. currentmodule:: pyhf.modifiers
+
+.. autoclass:: normfactor
+   :show-inheritance:
+
+   
+   
+   .. rubric:: Attributes
+
+   
+   .. autoattribute:: normfactor.is_constrained
+   .. autoattribute:: normfactor.op_code
+   .. autoattribute:: normfactor.pdf_type
+   
+   
+
+   
+   
+   .. rubric:: Methods
+
+   
+   .. automethod:: normfactor.required_parset
+   
+   

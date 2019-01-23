@@ -1,0 +1,565 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>pyhf.interpolators.code4 &mdash; pyhf 0.0.15 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/github-fork-ribbon-css/0.2.2/gh-fork-ribbon.min.css" type="text/css" />
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+
+  
+  <script src="../../../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../../../index.html" class="icon icon-home"> pyhf
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.0.15
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../examples.html">Examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../talks.html">Talks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../development.html">Developing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../faq.html">FAQ</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api.html">API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../citations.html">Use and Citations</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">pyhf</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+        
+          <li><a href="../../pyhf.html">pyhf</a> &raquo;</li>
+        
+      <li>pyhf.interpolators.code4</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for pyhf.interpolators.code4</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">import</span> <span class="nn">math</span>
+<span class="kn">from</span> <span class="nn">..</span> <span class="k">import</span> <span class="n">get_backend</span><span class="p">,</span> <span class="n">default_backend</span>
+<span class="kn">from</span> <span class="nn">..</span> <span class="k">import</span> <span class="n">events</span>
+<span class="kn">from</span> <span class="nn">.</span> <span class="k">import</span> <span class="n">_slow_interpolator_looper</span>
+
+<span class="n">log</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="code4"><a class="viewcode-back" href="../../../_generated/pyhf.interpolators.code4.html#pyhf.interpolators.code4">[docs]</a><span class="k">class</span> <span class="nc">code4</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    The polynomial interpolation and exponential extrapolation strategy.</span>
+
+<span class="sd">    .. math::</span>
+<span class="sd">        \sigma_{sb} (\vec{\alpha}) = \sigma_{sb}^0(\vec{\alpha}) \underbrace{\prod_{p \in \text{Syst}} I_\text{poly|exp.} (\alpha_p; \sigma_{sb}^0, \sigma_{psb}^+, \sigma_{psb}^-, \alpha_0)}_\text{factors to calculate}</span>
+
+
+<span class="sd">    with</span>
+
+<span class="sd">    .. math::</span>
+<span class="sd">        I_\text{poly|exp.}(\alpha; I^0, I^+, I^-, \alpha_0) = \begin{cases} \left(\frac{I^+}{I^0}\right)^{\alpha} \qquad \alpha \geq \alpha_0\\ 1 + \sum_{i=1}^6 a_i \alpha^i \qquad |\alpha| &lt; \alpha_0 \\ \left(\frac{I^-}{I^0}\right)^{-\alpha} \qquad \alpha &lt; -\alpha_0 \end{cases}</span>
+
+<span class="sd">    and the :math:`a_i` are fixed by the boundary conditions</span>
+
+<span class="sd">    .. math::</span>
+<span class="sd">        \sigma_{sb}(\alpha=\pm\alpha_0), \left.\frac{\mathrm{d}\sigma_{sb}}{\mathrm{d}\alpha}\right|_{\alpha=\pm\alpha_0}, \mathrm{ and } \left.\frac{\mathrm{d}^2\sigma_{sb}}{\mathrm{d}\alpha^2}\right|_{\alpha=\pm\alpha_0}.</span>
+
+<span class="sd">    Namely that :math:`\sigma_{sb}(\vec{\alpha})` is continuous, and its first- and second-order derivatives are continuous as well.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="code4.__init__"><a class="viewcode-back" href="../../../_generated/pyhf.interpolators.code4.html#pyhf.interpolators.code4.__init__">[docs]</a>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">histogramssets</span><span class="p">,</span> <span class="n">subscribe</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">alpha0</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+        <span class="c1"># alpha0 is assumed to be positive and non-zero. If alpha0 == 0, then</span>
+        <span class="c1"># we cannot calculate the coefficients (e.g. determinant == 0)</span>
+        <span class="k">assert</span> <span class="n">alpha0</span> <span class="o">&gt;</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__alpha0</span> <span class="o">=</span> <span class="n">alpha0</span>
+        <span class="c1"># nb: this should never be a tensor, store in default backend (e.g. numpy)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_histogramssets</span> <span class="o">=</span> <span class="n">default_backend</span><span class="o">.</span><span class="n">astensor</span><span class="p">(</span><span class="n">histogramssets</span><span class="p">)</span>
+        <span class="c1"># initial shape will be (nsysts, 1)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">alphasets_shape</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_histogramssets</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="c1"># precompute terms that only depend on the histogramssets</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_deltas_up</span> <span class="o">=</span> <span class="n">default_backend</span><span class="o">.</span><span class="n">divide</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_histogramssets</span><span class="p">[:,</span> <span class="p">:,</span> <span class="mi">2</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">_histogramssets</span><span class="p">[:,</span> <span class="p">:,</span> <span class="mi">1</span><span class="p">]</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_deltas_dn</span> <span class="o">=</span> <span class="n">default_backend</span><span class="o">.</span><span class="n">divide</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_histogramssets</span><span class="p">[:,</span> <span class="p">:,</span> <span class="mi">0</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">_histogramssets</span><span class="p">[:,</span> <span class="p">:,</span> <span class="mi">1</span><span class="p">]</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_broadcast_helper</span> <span class="o">=</span> <span class="n">default_backend</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span>
+            <span class="n">default_backend</span><span class="o">.</span><span class="n">shape</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_deltas_up</span><span class="p">)</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_alpha0</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_broadcast_helper</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">__alpha0</span>
+
+        <span class="n">deltas_up_alpha0</span> <span class="o">=</span> <span class="n">default_backend</span><span class="o">.</span><span class="n">power</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_deltas_up</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_alpha0</span><span class="p">)</span>
+        <span class="n">deltas_dn_alpha0</span> <span class="o">=</span> <span class="n">default_backend</span><span class="o">.</span><span class="n">power</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_deltas_dn</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_alpha0</span><span class="p">)</span>
+        <span class="c1"># x = A^{-1} b</span>
+        <span class="n">A_inverse</span> <span class="o">=</span> <span class="n">default_backend</span><span class="o">.</span><span class="n">astensor</span><span class="p">(</span>
+            <span class="p">[</span>
+                <span class="p">[</span>
+                    <span class="mf">15.0</span> <span class="o">/</span> <span class="p">(</span><span class="mi">16</span> <span class="o">*</span> <span class="n">alpha0</span><span class="p">),</span>
+                    <span class="o">-</span><span class="mf">15.0</span> <span class="o">/</span> <span class="p">(</span><span class="mi">16</span> <span class="o">*</span> <span class="n">alpha0</span><span class="p">),</span>
+                    <span class="o">-</span><span class="mf">7.0</span> <span class="o">/</span> <span class="mi">16</span><span class="p">,</span>
+                    <span class="o">-</span><span class="mf">7.0</span> <span class="o">/</span> <span class="mi">16</span><span class="p">,</span>
+                    <span class="mf">1.0</span> <span class="o">/</span> <span class="mi">16</span> <span class="o">*</span> <span class="n">alpha0</span><span class="p">,</span>
+                    <span class="o">-</span><span class="mf">1.0</span> <span class="o">/</span> <span class="mi">16</span> <span class="o">*</span> <span class="n">alpha0</span><span class="p">,</span>
+                <span class="p">],</span>
+                <span class="p">[</span>
+                    <span class="mf">3.0</span> <span class="o">/</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">alpha0</span> <span class="o">**</span> <span class="mi">2</span><span class="p">),</span>
+                    <span class="mf">3.0</span> <span class="o">/</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">alpha0</span> <span class="o">**</span> <span class="mi">2</span><span class="p">),</span>
+                    <span class="o">-</span><span class="mf">9.0</span> <span class="o">/</span> <span class="p">(</span><span class="mi">16</span> <span class="o">*</span> <span class="n">alpha0</span><span class="p">),</span>
+                    <span class="mf">9.0</span> <span class="o">/</span> <span class="p">(</span><span class="mi">16</span> <span class="o">*</span> <span class="n">alpha0</span><span class="p">),</span>
+                    <span class="mf">1.0</span> <span class="o">/</span> <span class="mi">16</span><span class="p">,</span>
+                    <span class="mf">1.0</span> <span class="o">/</span> <span class="mi">16</span><span class="p">,</span>
+                <span class="p">],</span>
+                <span class="p">[</span>
+                    <span class="o">-</span><span class="mf">5.0</span> <span class="o">/</span> <span class="p">(</span><span class="mi">8</span> <span class="o">*</span> <span class="n">alpha0</span> <span class="o">**</span> <span class="mi">3</span><span class="p">),</span>
+                    <span class="mf">5.0</span> <span class="o">/</span> <span class="p">(</span><span class="mi">8</span> <span class="o">*</span> <span class="n">alpha0</span> <span class="o">**</span> <span class="mi">3</span><span class="p">),</span>
+                    <span class="mf">5.0</span> <span class="o">/</span> <span class="p">(</span><span class="mi">8</span> <span class="o">*</span> <span class="n">alpha0</span> <span class="o">**</span> <span class="mi">2</span><span class="p">),</span>
+                    <span class="mf">5.0</span> <span class="o">/</span> <span class="p">(</span><span class="mi">8</span> <span class="o">*</span> <span class="n">alpha0</span> <span class="o">**</span> <span class="mi">2</span><span class="p">),</span>
+                    <span class="o">-</span><span class="mf">1.0</span> <span class="o">/</span> <span class="p">(</span><span class="mi">8</span> <span class="o">*</span> <span class="n">alpha0</span><span class="p">),</span>
+                    <span class="mf">1.0</span> <span class="o">/</span> <span class="p">(</span><span class="mi">8</span> <span class="o">*</span> <span class="n">alpha0</span><span class="p">),</span>
+                <span class="p">],</span>
+                <span class="p">[</span>
+                    <span class="mf">3.0</span> <span class="o">/</span> <span class="p">(</span><span class="o">-</span><span class="mi">2</span> <span class="o">*</span> <span class="n">alpha0</span> <span class="o">**</span> <span class="mi">4</span><span class="p">),</span>
+                    <span class="mf">3.0</span> <span class="o">/</span> <span class="p">(</span><span class="o">-</span><span class="mi">2</span> <span class="o">*</span> <span class="n">alpha0</span> <span class="o">**</span> <span class="mi">4</span><span class="p">),</span>
+                    <span class="o">-</span><span class="mf">7.0</span> <span class="o">/</span> <span class="p">(</span><span class="o">-</span><span class="mi">8</span> <span class="o">*</span> <span class="n">alpha0</span> <span class="o">**</span> <span class="mi">3</span><span class="p">),</span>
+                    <span class="mf">7.0</span> <span class="o">/</span> <span class="p">(</span><span class="o">-</span><span class="mi">8</span> <span class="o">*</span> <span class="n">alpha0</span> <span class="o">**</span> <span class="mi">3</span><span class="p">),</span>
+                    <span class="o">-</span><span class="mf">1.0</span> <span class="o">/</span> <span class="p">(</span><span class="mi">8</span> <span class="o">*</span> <span class="n">alpha0</span> <span class="o">**</span> <span class="mi">2</span><span class="p">),</span>
+                    <span class="o">-</span><span class="mf">1.0</span> <span class="o">/</span> <span class="p">(</span><span class="mi">8</span> <span class="o">*</span> <span class="n">alpha0</span> <span class="o">**</span> <span class="mi">2</span><span class="p">),</span>
+                <span class="p">],</span>
+                <span class="p">[</span>
+                    <span class="mf">3.0</span> <span class="o">/</span> <span class="p">(</span><span class="mi">16</span> <span class="o">*</span> <span class="n">alpha0</span> <span class="o">**</span> <span class="mi">5</span><span class="p">),</span>
+                    <span class="o">-</span><span class="mf">3.0</span> <span class="o">/</span> <span class="p">(</span><span class="mi">16</span> <span class="o">*</span> <span class="n">alpha0</span> <span class="o">**</span> <span class="mi">5</span><span class="p">),</span>
+                    <span class="o">-</span><span class="mf">3.0</span> <span class="o">/</span> <span class="p">(</span><span class="mi">16</span> <span class="o">*</span> <span class="n">alpha0</span> <span class="o">**</span> <span class="mi">4</span><span class="p">),</span>
+                    <span class="o">-</span><span class="mf">3.0</span> <span class="o">/</span> <span class="p">(</span><span class="mi">16</span> <span class="o">*</span> <span class="n">alpha0</span> <span class="o">**</span> <span class="mi">4</span><span class="p">),</span>
+                    <span class="mf">1.0</span> <span class="o">/</span> <span class="p">(</span><span class="mi">16</span> <span class="o">*</span> <span class="n">alpha0</span> <span class="o">**</span> <span class="mi">3</span><span class="p">),</span>
+                    <span class="o">-</span><span class="mf">1.0</span> <span class="o">/</span> <span class="p">(</span><span class="mi">16</span> <span class="o">*</span> <span class="n">alpha0</span> <span class="o">**</span> <span class="mi">3</span><span class="p">),</span>
+                <span class="p">],</span>
+                <span class="p">[</span>
+                    <span class="mf">1.0</span> <span class="o">/</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">alpha0</span> <span class="o">**</span> <span class="mi">6</span><span class="p">),</span>
+                    <span class="mf">1.0</span> <span class="o">/</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">alpha0</span> <span class="o">**</span> <span class="mi">6</span><span class="p">),</span>
+                    <span class="o">-</span><span class="mf">5.0</span> <span class="o">/</span> <span class="p">(</span><span class="mi">16</span> <span class="o">*</span> <span class="n">alpha0</span> <span class="o">**</span> <span class="mi">5</span><span class="p">),</span>
+                    <span class="mf">5.0</span> <span class="o">/</span> <span class="p">(</span><span class="mi">16</span> <span class="o">*</span> <span class="n">alpha0</span> <span class="o">**</span> <span class="mi">5</span><span class="p">),</span>
+                    <span class="mf">1.0</span> <span class="o">/</span> <span class="p">(</span><span class="mi">16</span> <span class="o">*</span> <span class="n">alpha0</span> <span class="o">**</span> <span class="mi">4</span><span class="p">),</span>
+                    <span class="mf">1.0</span> <span class="o">/</span> <span class="p">(</span><span class="mi">16</span> <span class="o">*</span> <span class="n">alpha0</span> <span class="o">**</span> <span class="mi">4</span><span class="p">),</span>
+                <span class="p">],</span>
+            <span class="p">]</span>
+        <span class="p">)</span>
+        <span class="n">b</span> <span class="o">=</span> <span class="n">default_backend</span><span class="o">.</span><span class="n">stack</span><span class="p">(</span>
+            <span class="p">[</span>
+                <span class="n">deltas_up_alpha0</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">_broadcast_helper</span><span class="p">,</span>
+                <span class="n">deltas_dn_alpha0</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">_broadcast_helper</span><span class="p">,</span>
+                <span class="n">default_backend</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_deltas_up</span><span class="p">)</span> <span class="o">*</span> <span class="n">deltas_up_alpha0</span><span class="p">,</span>
+                <span class="o">-</span><span class="n">default_backend</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_deltas_dn</span><span class="p">)</span> <span class="o">*</span> <span class="n">deltas_dn_alpha0</span><span class="p">,</span>
+                <span class="n">default_backend</span><span class="o">.</span><span class="n">power</span><span class="p">(</span><span class="n">default_backend</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_deltas_up</span><span class="p">),</span> <span class="mi">2</span><span class="p">)</span>
+                <span class="o">*</span> <span class="n">deltas_up_alpha0</span><span class="p">,</span>
+                <span class="n">default_backend</span><span class="o">.</span><span class="n">power</span><span class="p">(</span><span class="n">default_backend</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_deltas_dn</span><span class="p">),</span> <span class="mi">2</span><span class="p">)</span>
+                <span class="o">*</span> <span class="n">deltas_dn_alpha0</span><span class="p">,</span>
+            <span class="p">]</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_coefficients</span> <span class="o">=</span> <span class="n">default_backend</span><span class="o">.</span><span class="n">einsum</span><span class="p">(</span>
+            <span class="s1">&#39;rc,shb,cshb-&gt;rshb&#39;</span><span class="p">,</span> <span class="n">A_inverse</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_broadcast_helper</span><span class="p">,</span> <span class="n">b</span>
+        <span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_precompute</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">subscribe</span><span class="p">:</span>
+            <span class="n">events</span><span class="o">.</span><span class="n">subscribe</span><span class="p">(</span><span class="s1">&#39;tensorlib_changed&#39;</span><span class="p">)(</span><span class="bp">self</span><span class="o">.</span><span class="n">_precompute</span><span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="nf">_precompute</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">tensorlib</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">get_backend</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">deltas_up</span> <span class="o">=</span> <span class="n">tensorlib</span><span class="o">.</span><span class="n">astensor</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_deltas_up</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">deltas_dn</span> <span class="o">=</span> <span class="n">tensorlib</span><span class="o">.</span><span class="n">astensor</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_deltas_dn</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">broadcast_helper</span> <span class="o">=</span> <span class="n">tensorlib</span><span class="o">.</span><span class="n">astensor</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_broadcast_helper</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">alpha0</span> <span class="o">=</span> <span class="n">tensorlib</span><span class="o">.</span><span class="n">astensor</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_alpha0</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">coefficients</span> <span class="o">=</span> <span class="n">tensorlib</span><span class="o">.</span><span class="n">astensor</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_coefficients</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">bases_up</span> <span class="o">=</span> <span class="n">tensorlib</span><span class="o">.</span><span class="n">einsum</span><span class="p">(</span>
+            <span class="s1">&#39;sa,shb-&gt;shab&#39;</span><span class="p">,</span> <span class="n">tensorlib</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">alphasets_shape</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">deltas_up</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">bases_dn</span> <span class="o">=</span> <span class="n">tensorlib</span><span class="o">.</span><span class="n">einsum</span><span class="p">(</span>
+            <span class="s1">&#39;sa,shb-&gt;shab&#39;</span><span class="p">,</span> <span class="n">tensorlib</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">alphasets_shape</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">deltas_dn</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mask_on</span> <span class="o">=</span> <span class="n">tensorlib</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">alphasets_shape</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mask_off</span> <span class="o">=</span> <span class="n">tensorlib</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">alphasets_shape</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ones</span> <span class="o">=</span> <span class="n">tensorlib</span><span class="o">.</span><span class="n">einsum</span><span class="p">(</span>
+            <span class="s1">&#39;sa,shb-&gt;shab&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">mask_on</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">broadcast_helper</span>
+        <span class="p">)</span>
+        <span class="k">return</span>
+
+    <span class="k">def</span> <span class="nf">_precompute_alphasets</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">alphasets_shape</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">alphasets_shape</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">alphasets_shape</span><span class="p">:</span>
+            <span class="k">return</span>
+        <span class="n">tensorlib</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">get_backend</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">alphasets_shape</span> <span class="o">=</span> <span class="n">alphasets_shape</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">bases_up</span> <span class="o">=</span> <span class="n">tensorlib</span><span class="o">.</span><span class="n">einsum</span><span class="p">(</span>
+            <span class="s1">&#39;sa,shb-&gt;shab&#39;</span><span class="p">,</span> <span class="n">tensorlib</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">alphasets_shape</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">deltas_up</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">bases_dn</span> <span class="o">=</span> <span class="n">tensorlib</span><span class="o">.</span><span class="n">einsum</span><span class="p">(</span>
+            <span class="s1">&#39;sa,shb-&gt;shab&#39;</span><span class="p">,</span> <span class="n">tensorlib</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">alphasets_shape</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">deltas_dn</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mask_on</span> <span class="o">=</span> <span class="n">tensorlib</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">alphasets_shape</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mask_off</span> <span class="o">=</span> <span class="n">tensorlib</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">alphasets_shape</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ones</span> <span class="o">=</span> <span class="n">tensorlib</span><span class="o">.</span><span class="n">einsum</span><span class="p">(</span>
+            <span class="s1">&#39;sa,shb-&gt;shab&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">mask_on</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">broadcast_helper</span>
+        <span class="p">)</span>
+        <span class="k">return</span>
+
+    <span class="k">def</span> <span class="nf">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">alphasets</span><span class="p">):</span>
+        <span class="n">tensorlib</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">get_backend</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_precompute_alphasets</span><span class="p">(</span><span class="n">tensorlib</span><span class="o">.</span><span class="n">shape</span><span class="p">(</span><span class="n">alphasets</span><span class="p">))</span>
+
+        <span class="c1"># select where alpha &gt;= alpha0 and produce the mask</span>
+        <span class="n">where_alphasets_gtalpha0</span> <span class="o">=</span> <span class="n">tensorlib</span><span class="o">.</span><span class="n">where</span><span class="p">(</span>
+            <span class="n">alphasets</span> <span class="o">&gt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__alpha0</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">mask_on</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">mask_off</span>
+        <span class="p">)</span>
+        <span class="n">masks_gtalpha0</span> <span class="o">=</span> <span class="n">tensorlib</span><span class="o">.</span><span class="n">einsum</span><span class="p">(</span>
+            <span class="s1">&#39;sa,shb-&gt;shab&#39;</span><span class="p">,</span> <span class="n">where_alphasets_gtalpha0</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">broadcast_helper</span>
+        <span class="p">)</span>
+
+        <span class="c1"># select where alpha &gt; -alpha0 [&quot;not(alpha &lt;= -alpha0)&quot;] and produce the mask</span>
+        <span class="n">where_alphasets_not_ltalpha0</span> <span class="o">=</span> <span class="n">tensorlib</span><span class="o">.</span><span class="n">where</span><span class="p">(</span>
+            <span class="n">alphasets</span> <span class="o">&gt;</span> <span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">__alpha0</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">mask_on</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">mask_off</span>
+        <span class="p">)</span>
+        <span class="n">masks_not_ltalpha0</span> <span class="o">=</span> <span class="n">tensorlib</span><span class="o">.</span><span class="n">einsum</span><span class="p">(</span>
+            <span class="s1">&#39;sa,shb-&gt;shab&#39;</span><span class="p">,</span> <span class="n">where_alphasets_not_ltalpha0</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">broadcast_helper</span>
+        <span class="p">)</span>
+
+        <span class="c1"># s: set under consideration (i.e. the modifier)</span>
+        <span class="c1"># a: alpha variation</span>
+        <span class="c1"># h: histogram affected by modifier</span>
+        <span class="c1"># b: bin of histogram</span>
+        <span class="n">exponents</span> <span class="o">=</span> <span class="n">tensorlib</span><span class="o">.</span><span class="n">einsum</span><span class="p">(</span>
+            <span class="s1">&#39;sa,shb-&gt;shab&#39;</span><span class="p">,</span> <span class="n">tensorlib</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">alphasets</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">broadcast_helper</span>
+        <span class="p">)</span>
+        <span class="c1"># for |alpha| &gt;= alpha0, we want to raise the bases to the exponent=alpha</span>
+        <span class="c1"># and for |alpha| &lt; alpha0, we want to raise the bases to the exponent=1</span>
+        <span class="n">masked_exponents</span> <span class="o">=</span> <span class="n">tensorlib</span><span class="o">.</span><span class="n">where</span><span class="p">(</span>
+            <span class="n">exponents</span> <span class="o">&gt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__alpha0</span><span class="p">,</span> <span class="n">exponents</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">ones</span>
+        <span class="p">)</span>
+        <span class="c1"># we need to produce the terms of alpha^i for summing up</span>
+        <span class="n">alphasets_powers</span> <span class="o">=</span> <span class="n">tensorlib</span><span class="o">.</span><span class="n">stack</span><span class="p">(</span>
+            <span class="p">[</span>
+                <span class="n">alphasets</span><span class="p">,</span>
+                <span class="n">tensorlib</span><span class="o">.</span><span class="n">power</span><span class="p">(</span><span class="n">alphasets</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span>
+                <span class="n">tensorlib</span><span class="o">.</span><span class="n">power</span><span class="p">(</span><span class="n">alphasets</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span>
+                <span class="n">tensorlib</span><span class="o">.</span><span class="n">power</span><span class="p">(</span><span class="n">alphasets</span><span class="p">,</span> <span class="mi">4</span><span class="p">),</span>
+                <span class="n">tensorlib</span><span class="o">.</span><span class="n">power</span><span class="p">(</span><span class="n">alphasets</span><span class="p">,</span> <span class="mi">5</span><span class="p">),</span>
+                <span class="n">tensorlib</span><span class="o">.</span><span class="n">power</span><span class="p">(</span><span class="n">alphasets</span><span class="p">,</span> <span class="mi">6</span><span class="p">),</span>
+            <span class="p">]</span>
+        <span class="p">)</span>
+        <span class="c1"># this is the 1 + sum_i a_i alpha^i</span>
+        <span class="n">value_btwn</span> <span class="o">=</span> <span class="n">tensorlib</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">exponents</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">+</span> <span class="n">tensorlib</span><span class="o">.</span><span class="n">einsum</span><span class="p">(</span>
+            <span class="s1">&#39;rshb,rsa-&gt;shab&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">coefficients</span><span class="p">,</span> <span class="n">alphasets_powers</span>
+        <span class="p">)</span>
+
+        <span class="c1"># first, build a result where:</span>
+        <span class="c1">#       alpha &gt; alpha0   : fill with bases_up</span>
+        <span class="c1">#   not(alpha &gt; alpha0)  : fill with 1 + sum(a_i alpha^i)</span>
+        <span class="n">results_gtalpha0_btwn</span> <span class="o">=</span> <span class="n">tensorlib</span><span class="o">.</span><span class="n">where</span><span class="p">(</span>
+            <span class="n">masks_gtalpha0</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">bases_up</span><span class="p">,</span> <span class="n">value_btwn</span>
+        <span class="p">)</span>
+        <span class="c1"># then, build a result where:</span>
+        <span class="c1">#      alpha &gt;= -alpha0  : do nothing (fill with previous result)</span>
+        <span class="c1">#   not(alpha &gt;= -alpha0): fill with bases_dn</span>
+        <span class="n">bases</span> <span class="o">=</span> <span class="n">tensorlib</span><span class="o">.</span><span class="n">where</span><span class="p">(</span>
+            <span class="n">masks_not_ltalpha0</span><span class="p">,</span> <span class="n">results_gtalpha0_btwn</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">bases_dn</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="n">tensorlib</span><span class="o">.</span><span class="n">power</span><span class="p">(</span><span class="n">bases</span><span class="p">,</span> <span class="n">masked_exponents</span><span class="p">)</span></div>
+
+
+<span class="k">class</span> <span class="nc">_slow_code4</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    delta_up**alpha0 = 1 + a1 alpha0 + a2 alpha0^2 + a3 alpha0^3 + a4 alpha0^4 + a5 alpha0^5 + a6 alpha0^6</span>
+<span class="sd">    delta_down**alpha0 = 1 - a1 alpha0 + a2 alpha0^2 - a3 alpha0^3 + a4 alpha0^4 - a5 alpha0^5 + a6 alpha0^6</span>
+
+<span class="sd">    f[alpha_] := 1 + a1 * alpha + a2 * alpha^2 + a3 * alpha^3 + a4 * alpha^4 + a5 * alpha^5 + a6 * alpha^6</span>
+<span class="sd">    up[alpha_] := delta_up^alpha</span>
+<span class="sd">    down[alpha_] := delta_down^(-alpha)</span>
+
+<span class="sd">    We want to find the coefficients a1, a2, a3, a4, a5, a6 by solving:</span>
+<span class="sd">      f[alpha0] == up[alpha0]</span>
+<span class="sd">      f[-alpha0] == down[-alpha0]</span>
+<span class="sd">      f&#39;[alpha0] == up&#39;[alpha0]</span>
+<span class="sd">      f&#39;[-alpha0] == down&#39;[-alpha0]</span>
+<span class="sd">      f&#39;&#39;[alpha0] == up&#39;&#39;[alpha0]</span>
+<span class="sd">      f&#39;&#39;[-alpha0] == down&#39;&#39;[-alpha0]</span>
+
+<span class="sd">    Treating this as multiplication with a rank-6 matrix A: A*x = b, where x = [a1, a2, a3, a4, a5, a6]</span>
+
+<span class="sd">    [alpha0,  alpha0^2, alpha0^3,   alpha0^4,   alpha0^5,     alpha0^6  ] [a1] = [ delta_up^(alpha0) - 1                ]</span>
+<span class="sd">    [-alpha0, alpha0^2, -alpha0^3,  alpha0^4,   -alpha0^5,    alpha0^6  ] [a2] = [ delta_down^(alpha0) - 1              ]</span>
+<span class="sd">    [1,       2alpha0,  3alpha0^2,  4alpha0^3,  5alpha0^4,    6alpha0^5 ] [a3] = [ ln(delta_up) delta_up^(alpha0)       ]</span>
+<span class="sd">    [1,       -2alpha0, 3alpha0^2,  -4alpha0^3, 5alpha0^4,    -6alpha0^5] [a4] = [ - ln(delta_down) delta_down^(alpha0) ]</span>
+<span class="sd">    [0,       2,        6alpha0,    12alpha0^2, 20alpha0^3,   30alpha0^4] [a5] = [ ln(delta_up)^2 delta_up^(alpha0)     ]</span>
+<span class="sd">    [0,       2,        -6alpha0,   12alpha0^2, -20alpha0^3,  30alpha0^4] [a6] = [ ln(delta_down)^2 delta_down^(alpha0) ]</span>
+
+<span class="sd">    The determinant of this matrix is -2048*alpha0^15. The trace is 30*alpha0^4+16*alpha0^3+4*alpha0^2+alpha0. Therefore, this matrix is invertible if and only if alpha0 != 0.</span>
+
+<span class="sd">    The inverse of this matrix is (and verifying with http://wims.unice.fr/~wims/wims.cgi)</span>
+
+<span class="sd">    [15/(16*alpha0),  -15/(16*alpha0),  -7/16,            -7/16,            1/16*alpha0,      -1/16*alpha0    ]</span>
+<span class="sd">    [3/(2*alpha0^2),  3/(2*alpha0^2),   -9/(16*alpha0),   9/(16*alpha0),    1/16,             1/16            ]</span>
+<span class="sd">    [-5/(8*alpha0^3), 5/(8*alpha0^3),   5/(8*alpha0^2),   5/(8*alpha0^2),   -1/(8*alpha0),    1/(8*alpha0)    ]</span>
+<span class="sd">    [3/(-2*alpha0^4), 3/(-2*alpha0^4),  -7/(-8*alpha0^3), 7/(-8*alpha0^3),  -1/(8*alpha0^2),  -1/(8*alpha0^2) ]</span>
+<span class="sd">    [3/(16*alpha0^5), -3/(16*alpha0^5), -3/(16*alpha0^4), -3/(16*alpha0^4), 1/(16*alpha0^3),  -1/(16*alpha0^3)]</span>
+<span class="sd">    [1/(2*alpha0^6),  1/(2*alpha0^6),   -5/(16*alpha0^5), 5/(16*alpha0^5),  1/(16*alpha0^4),  1/(16*alpha0^4) ]</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">product</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">down</span><span class="p">,</span> <span class="n">nom</span><span class="p">,</span> <span class="n">up</span><span class="p">,</span> <span class="n">alpha</span><span class="p">):</span>
+        <span class="n">delta_up</span> <span class="o">=</span> <span class="n">up</span> <span class="o">/</span> <span class="n">nom</span>
+        <span class="n">delta_down</span> <span class="o">=</span> <span class="n">down</span> <span class="o">/</span> <span class="n">nom</span>
+        <span class="k">if</span> <span class="n">alpha</span> <span class="o">&gt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">alpha0</span><span class="p">:</span>
+            <span class="n">delta</span> <span class="o">=</span> <span class="n">delta_up</span> <span class="o">**</span> <span class="n">alpha</span>
+        <span class="k">elif</span> <span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">alpha0</span> <span class="o">&lt;</span> <span class="n">alpha</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">alpha0</span><span class="p">:</span>
+            <span class="n">delta_up_alpha0</span> <span class="o">=</span> <span class="n">delta_up</span> <span class="o">**</span> <span class="bp">self</span><span class="o">.</span><span class="n">alpha0</span>
+            <span class="n">delta_down_alpha0</span> <span class="o">=</span> <span class="n">delta_down</span> <span class="o">**</span> <span class="bp">self</span><span class="o">.</span><span class="n">alpha0</span>
+            <span class="n">b</span> <span class="o">=</span> <span class="p">[</span>
+                <span class="n">delta_up_alpha0</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span>
+                <span class="n">delta_down_alpha0</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span>
+                <span class="n">math</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">delta_up</span><span class="p">)</span> <span class="o">*</span> <span class="n">delta_up_alpha0</span><span class="p">,</span>
+                <span class="o">-</span><span class="n">math</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">delta_down</span><span class="p">)</span> <span class="o">*</span> <span class="n">delta_down_alpha0</span><span class="p">,</span>
+                <span class="n">math</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">delta_up</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">delta_up_alpha0</span><span class="p">,</span>
+                <span class="n">math</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">delta_down</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">delta_down_alpha0</span><span class="p">,</span>
+            <span class="p">]</span>
+            <span class="n">A_inverse</span> <span class="o">=</span> <span class="p">[</span>
+                <span class="p">[</span>
+                    <span class="mf">15.0</span> <span class="o">/</span> <span class="p">(</span><span class="mi">16</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">alpha0</span><span class="p">),</span>
+                    <span class="o">-</span><span class="mf">15.0</span> <span class="o">/</span> <span class="p">(</span><span class="mi">16</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">alpha0</span><span class="p">),</span>
+                    <span class="o">-</span><span class="mf">7.0</span> <span class="o">/</span> <span class="mi">16</span><span class="p">,</span>
+                    <span class="o">-</span><span class="mf">7.0</span> <span class="o">/</span> <span class="mi">16</span><span class="p">,</span>
+                    <span class="mf">1.0</span> <span class="o">/</span> <span class="mi">16</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">alpha0</span><span class="p">,</span>
+                    <span class="o">-</span><span class="mf">1.0</span> <span class="o">/</span> <span class="mi">16</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">alpha0</span><span class="p">,</span>
+                <span class="p">],</span>
+                <span class="p">[</span>
+                    <span class="mf">3.0</span> <span class="o">/</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">alpha0</span> <span class="o">**</span> <span class="mi">2</span><span class="p">),</span>
+                    <span class="mf">3.0</span> <span class="o">/</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">alpha0</span> <span class="o">**</span> <span class="mi">2</span><span class="p">),</span>
+                    <span class="o">-</span><span class="mf">9.0</span> <span class="o">/</span> <span class="p">(</span><span class="mi">16</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">alpha0</span><span class="p">),</span>
+                    <span class="mf">9.0</span> <span class="o">/</span> <span class="p">(</span><span class="mi">16</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">alpha0</span><span class="p">),</span>
+                    <span class="mf">1.0</span> <span class="o">/</span> <span class="mi">16</span><span class="p">,</span>
+                    <span class="mf">1.0</span> <span class="o">/</span> <span class="mi">16</span><span class="p">,</span>
+                <span class="p">],</span>
+                <span class="p">[</span>
+                    <span class="o">-</span><span class="mf">5.0</span> <span class="o">/</span> <span class="p">(</span><span class="mi">8</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">alpha0</span> <span class="o">**</span> <span class="mi">3</span><span class="p">),</span>
+                    <span class="mf">5.0</span> <span class="o">/</span> <span class="p">(</span><span class="mi">8</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">alpha0</span> <span class="o">**</span> <span class="mi">3</span><span class="p">),</span>
+                    <span class="mf">5.0</span> <span class="o">/</span> <span class="p">(</span><span class="mi">8</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">alpha0</span> <span class="o">**</span> <span class="mi">2</span><span class="p">),</span>
+                    <span class="mf">5.0</span> <span class="o">/</span> <span class="p">(</span><span class="mi">8</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">alpha0</span> <span class="o">**</span> <span class="mi">2</span><span class="p">),</span>
+                    <span class="o">-</span><span class="mf">1.0</span> <span class="o">/</span> <span class="p">(</span><span class="mi">8</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">alpha0</span><span class="p">),</span>
+                    <span class="mf">1.0</span> <span class="o">/</span> <span class="p">(</span><span class="mi">8</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">alpha0</span><span class="p">),</span>
+                <span class="p">],</span>
+                <span class="p">[</span>
+                    <span class="mf">3.0</span> <span class="o">/</span> <span class="p">(</span><span class="o">-</span><span class="mi">2</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">alpha0</span> <span class="o">**</span> <span class="mi">4</span><span class="p">),</span>
+                    <span class="mf">3.0</span> <span class="o">/</span> <span class="p">(</span><span class="o">-</span><span class="mi">2</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">alpha0</span> <span class="o">**</span> <span class="mi">4</span><span class="p">),</span>
+                    <span class="o">-</span><span class="mf">7.0</span> <span class="o">/</span> <span class="p">(</span><span class="o">-</span><span class="mi">8</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">alpha0</span> <span class="o">**</span> <span class="mi">3</span><span class="p">),</span>
+                    <span class="mf">7.0</span> <span class="o">/</span> <span class="p">(</span><span class="o">-</span><span class="mi">8</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">alpha0</span> <span class="o">**</span> <span class="mi">3</span><span class="p">),</span>
+                    <span class="o">-</span><span class="mf">1.0</span> <span class="o">/</span> <span class="p">(</span><span class="mi">8</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">alpha0</span> <span class="o">**</span> <span class="mi">2</span><span class="p">),</span>
+                    <span class="o">-</span><span class="mf">1.0</span> <span class="o">/</span> <span class="p">(</span><span class="mi">8</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">alpha0</span> <span class="o">**</span> <span class="mi">2</span><span class="p">),</span>
+                <span class="p">],</span>
+                <span class="p">[</span>
+                    <span class="mf">3.0</span> <span class="o">/</span> <span class="p">(</span><span class="mi">16</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">alpha0</span> <span class="o">**</span> <span class="mi">5</span><span class="p">),</span>
+                    <span class="o">-</span><span class="mf">3.0</span> <span class="o">/</span> <span class="p">(</span><span class="mi">16</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">alpha0</span> <span class="o">**</span> <span class="mi">5</span><span class="p">),</span>
+                    <span class="o">-</span><span class="mf">3.0</span> <span class="o">/</span> <span class="p">(</span><span class="mi">16</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">alpha0</span> <span class="o">**</span> <span class="mi">4</span><span class="p">),</span>
+                    <span class="o">-</span><span class="mf">3.0</span> <span class="o">/</span> <span class="p">(</span><span class="mi">16</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">alpha0</span> <span class="o">**</span> <span class="mi">4</span><span class="p">),</span>
+                    <span class="mf">1.0</span> <span class="o">/</span> <span class="p">(</span><span class="mi">16</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">alpha0</span> <span class="o">**</span> <span class="mi">3</span><span class="p">),</span>
+                    <span class="o">-</span><span class="mf">1.0</span> <span class="o">/</span> <span class="p">(</span><span class="mi">16</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">alpha0</span> <span class="o">**</span> <span class="mi">3</span><span class="p">),</span>
+                <span class="p">],</span>
+                <span class="p">[</span>
+                    <span class="mf">1.0</span> <span class="o">/</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">alpha0</span> <span class="o">**</span> <span class="mi">6</span><span class="p">),</span>
+                    <span class="mf">1.0</span> <span class="o">/</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">alpha0</span> <span class="o">**</span> <span class="mi">6</span><span class="p">),</span>
+                    <span class="o">-</span><span class="mf">5.0</span> <span class="o">/</span> <span class="p">(</span><span class="mi">16</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">alpha0</span> <span class="o">**</span> <span class="mi">5</span><span class="p">),</span>
+                    <span class="mf">5.0</span> <span class="o">/</span> <span class="p">(</span><span class="mi">16</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">alpha0</span> <span class="o">**</span> <span class="mi">5</span><span class="p">),</span>
+                    <span class="mf">1.0</span> <span class="o">/</span> <span class="p">(</span><span class="mi">16</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">alpha0</span> <span class="o">**</span> <span class="mi">4</span><span class="p">),</span>
+                    <span class="mf">1.0</span> <span class="o">/</span> <span class="p">(</span><span class="mi">16</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">alpha0</span> <span class="o">**</span> <span class="mi">4</span><span class="p">),</span>
+                <span class="p">],</span>
+            <span class="p">]</span>
+
+            <span class="n">coefficients</span> <span class="o">=</span> <span class="p">[</span>
+                <span class="nb">sum</span><span class="p">([</span><span class="n">A_i</span> <span class="o">*</span> <span class="n">b_j</span> <span class="k">for</span> <span class="n">A_i</span><span class="p">,</span> <span class="n">b_j</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">A_row</span><span class="p">,</span> <span class="n">b</span><span class="p">)])</span> <span class="k">for</span> <span class="n">A_row</span> <span class="ow">in</span> <span class="n">A_inverse</span>
+            <span class="p">]</span>
+            <span class="n">delta</span> <span class="o">=</span> <span class="mi">1</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">7</span><span class="p">):</span>
+                <span class="n">delta</span> <span class="o">+=</span> <span class="n">coefficients</span><span class="p">[</span><span class="n">i</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span> <span class="o">*</span> <span class="n">alpha</span> <span class="o">**</span> <span class="n">i</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">delta</span> <span class="o">=</span> <span class="n">delta_down</span> <span class="o">**</span> <span class="p">(</span><span class="o">-</span><span class="n">alpha</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">delta</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">histogramssets</span><span class="p">,</span> <span class="n">subscribe</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">alpha0</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_histogramssets</span> <span class="o">=</span> <span class="n">histogramssets</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">alpha0</span> <span class="o">=</span> <span class="n">alpha0</span>
+
+    <span class="k">def</span> <span class="nf">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">alphasets</span><span class="p">):</span>
+        <span class="n">tensorlib</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">get_backend</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">tensorlib</span><span class="o">.</span><span class="n">astensor</span><span class="p">(</span>
+            <span class="n">_slow_interpolator_looper</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_histogramssets</span><span class="p">,</span> <span class="n">tensorlib</span><span class="o">.</span><span class="n">tolist</span><span class="p">(</span><span class="n">alphasets</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">product</span>
+            <span class="p">)</span>
+        <span class="p">)</span>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2018, Lukas Heinrich, Matthew Feickert, Giordon Stark
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+        <script type="text/javascript" src="../../../_static/jquery.js"></script>
+        <script type="text/javascript" src="../../../_static/underscore.js"></script>
+        <script type="text/javascript" src="../../../_static/doctools.js"></script>
+        <script type="text/javascript" src="../../../_static/language_data.js"></script>
+        <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+        <script type="text/x-mathjax-config">MathJax.Hub.Config({"tex2jax": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true, "ignoreClass": "document", "processClass": "math|output_area"}})</script>
+    
+
+  
+
+  <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

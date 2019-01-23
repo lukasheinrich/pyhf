@@ -1,0 +1,24 @@
+:github_url: https://github.com/diana-hep/pyhf/blob/master/pyhf/optimize/opt_pytorch
+
+pytorch\_optimizer
+==================
+
+.. currentmodule:: pyhf.optimize.opt_pytorch
+
+.. autoclass:: pytorch_optimizer
+   :show-inheritance:
+
+   
+   
+   
+
+   
+   
+   .. rubric:: Methods
+
+   
+   .. automethod:: pytorch_optimizer.__init__
+   .. automethod:: pytorch_optimizer.constrained_bestfit
+   .. automethod:: pytorch_optimizer.unconstrained_bestfit
+   
+   

@@ -1,0 +1,6 @@
+pyhf.set\_backend
+=================
+
+.. currentmodule:: pyhf
+
+.. autofunction:: set_backend

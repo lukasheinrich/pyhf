@@ -1,0 +1,495 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>API &mdash; pyhf 0.0.15 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/github-fork-ribbon-css/0.2.2/gh-fork-ribbon.min.css" type="text/css" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="pyhf.default_backend" href="_generated/pyhf.default_backend.html" />
+    <link rel="prev" title="FAQ" href="faq.html" /> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="index.html" class="icon icon-home"> pyhf
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.0.15
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="examples.html">Examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="talks.html">Talks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="development.html">Developing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="faq.html">FAQ</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">API</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#top-level">Top-Level</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="_generated/pyhf.default_backend.html">pyhf.default_backend</a></li>
+<li class="toctree-l3"><a class="reference internal" href="_generated/pyhf.default_optimizer.html">pyhf.default_optimizer</a></li>
+<li class="toctree-l3"><a class="reference internal" href="_generated/pyhf.tensorlib.html">pyhf.tensorlib</a></li>
+<li class="toctree-l3"><a class="reference internal" href="_generated/pyhf.optimizer.html">pyhf.optimizer</a></li>
+<li class="toctree-l3"><a class="reference internal" href="_generated/pyhf.get_backend.html">pyhf.get_backend</a></li>
+<li class="toctree-l3"><a class="reference internal" href="_generated/pyhf.set_backend.html">pyhf.set_backend</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#making-probability-distribution-functions-pdfs">Making Probability Distribution Functions (PDFs)</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="_generated/pyhf.pdf.Model.html">Model</a></li>
+<li class="toctree-l3"><a class="reference internal" href="_generated/pyhf.pdf._ModelConfig.html">_ModelConfig</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#backends">Backends</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="_generated/pyhf.tensor.mxnet_backend.mxnet_backend.html">mxnet_backend</a></li>
+<li class="toctree-l3"><a class="reference internal" href="_generated/pyhf.tensor.numpy_backend.numpy_backend.html">numpy_backend</a></li>
+<li class="toctree-l3"><a class="reference internal" href="_generated/pyhf.tensor.pytorch_backend.pytorch_backend.html">pytorch_backend</a></li>
+<li class="toctree-l3"><a class="reference internal" href="_generated/pyhf.tensor.tensorflow_backend.tensorflow_backend.html">tensorflow_backend</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#optimizers">Optimizers</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="_generated/pyhf.optimize.opt_pytorch.pytorch_optimizer.html">pytorch_optimizer</a></li>
+<li class="toctree-l3"><a class="reference internal" href="_generated/pyhf.optimize.opt_scipy.scipy_optimizer.html">scipy_optimizer</a></li>
+<li class="toctree-l3"><a class="reference internal" href="_generated/pyhf.optimize.opt_tflow.tflow_optimizer.html">tflow_optimizer</a></li>
+<li class="toctree-l3"><a class="reference internal" href="_generated/pyhf.optimize.opt_minuit.minuit_optimizer.html">minuit_optimizer</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#modifiers">Modifiers</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="_generated/pyhf.modifiers.histosys.html">histosys</a></li>
+<li class="toctree-l3"><a class="reference internal" href="_generated/pyhf.modifiers.normfactor.html">normfactor</a></li>
+<li class="toctree-l3"><a class="reference internal" href="_generated/pyhf.modifiers.normsys.html">normsys</a></li>
+<li class="toctree-l3"><a class="reference internal" href="_generated/pyhf.modifiers.shapefactor.html">shapefactor</a></li>
+<li class="toctree-l3"><a class="reference internal" href="_generated/pyhf.modifiers.shapesys.html">shapesys</a></li>
+<li class="toctree-l3"><a class="reference internal" href="_generated/pyhf.modifiers.staterror.html">staterror</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#interpolators">Interpolators</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="_generated/pyhf.interpolators.code0.html">code0</a></li>
+<li class="toctree-l3"><a class="reference internal" href="_generated/pyhf.interpolators.code1.html">code1</a></li>
+<li class="toctree-l3"><a class="reference internal" href="_generated/pyhf.interpolators.code2.html">code2</a></li>
+<li class="toctree-l3"><a class="reference internal" href="_generated/pyhf.interpolators.code4.html">code4</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#exceptions">Exceptions</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="_generated/pyhf.exceptions.InvalidInterpCode.html">InvalidInterpCode</a></li>
+<li class="toctree-l3"><a class="reference internal" href="_generated/pyhf.exceptions.InvalidModifier.html">InvalidModifier</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#utilities">Utilities</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="_generated/pyhf.utils.generate_asimov_data.html">pyhf.utils.generate_asimov_data</a></li>
+<li class="toctree-l3"><a class="reference internal" href="_generated/pyhf.utils.loglambdav.html">pyhf.utils.loglambdav</a></li>
+<li class="toctree-l3"><a class="reference internal" href="_generated/pyhf.utils.pvals_from_teststat.html">pyhf.utils.pvals_from_teststat</a></li>
+<li class="toctree-l3"><a class="reference internal" href="_generated/pyhf.utils.qmu.html">pyhf.utils.qmu</a></li>
+<li class="toctree-l3"><a class="reference internal" href="_generated/pyhf.utils.hypotest.html">pyhf.utils.hypotest</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="citations.html">Use and Citations</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">pyhf</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+      <li>API</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/api.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  
+<style>
+/* CSS overrides for sphinx_rtd_theme */
+
+/* 24px margin */
+.nbinput.nblast,
+.nboutput.nblast {
+    margin-bottom: 19px;  /* padding has already 5px */
+}
+
+/* ... except between code cells! */
+.nblast + .nbinput {
+    margin-top: -19px;
+}
+
+.admonition > p:before {
+    margin-right: 4px;  /* make room for the exclamation icon */
+}
+
+/* Fix math alignment, see https://github.com/rtfd/sphinx_rtd_theme/pull/686 */
+.math {
+    text-align: unset;
+}
+</style>
+<div class="section" id="api">
+<h1>API<a class="headerlink" href="#api" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="top-level">
+<h2>Top-Level<a class="headerlink" href="#top-level" title="Permalink to this headline">¶</a></h2>
+<table border="1" class="longtable docutils">
+<colgroup>
+<col width="10%" />
+<col width="90%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td><a class="reference internal" href="_generated/pyhf.default_backend.html#pyhf.default_backend" title="pyhf.default_backend"><code class="xref py py-obj docutils literal notranslate"><span class="pre">default_backend</span></code></a></td>
+<td>NumPy backend for pyhf</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="_generated/pyhf.default_optimizer.html#pyhf.default_optimizer" title="pyhf.default_optimizer"><code class="xref py py-obj docutils literal notranslate"><span class="pre">default_optimizer</span></code></a></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="_generated/pyhf.tensorlib.html#pyhf.tensorlib" title="pyhf.tensorlib"><code class="xref py py-obj docutils literal notranslate"><span class="pre">tensorlib</span></code></a></td>
+<td>NumPy backend for pyhf</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="_generated/pyhf.optimizer.html#pyhf.optimizer" title="pyhf.optimizer"><code class="xref py py-obj docutils literal notranslate"><span class="pre">optimizer</span></code></a></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="_generated/pyhf.get_backend.html#pyhf.get_backend" title="pyhf.get_backend"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_backend</span></code></a>()</td>
+<td>Get the current backend and the associated optimizer</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="_generated/pyhf.set_backend.html#pyhf.set_backend" title="pyhf.set_backend"><code class="xref py py-obj docutils literal notranslate"><span class="pre">set_backend</span></code></a>(*args,&nbsp;**kwargs)</td>
+<td></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="making-probability-distribution-functions-pdfs">
+<h2>Making Probability Distribution Functions (PDFs)<a class="headerlink" href="#making-probability-distribution-functions-pdfs" title="Permalink to this headline">¶</a></h2>
+<table border="1" class="longtable docutils">
+<colgroup>
+<col width="10%" />
+<col width="90%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td><a class="reference internal" href="_generated/pyhf.pdf.Model.html#pyhf.pdf.Model" title="pyhf.pdf.Model"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Model</span></code></a></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="_generated/pyhf.pdf._ModelConfig.html#pyhf.pdf._ModelConfig" title="pyhf.pdf._ModelConfig"><code class="xref py py-obj docutils literal notranslate"><span class="pre">_ModelConfig</span></code></a></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="backends">
+<h2>Backends<a class="headerlink" href="#backends" title="Permalink to this headline">¶</a></h2>
+<p>The computational backends that <code class="code docutils literal notranslate"><span class="pre">pyhf</span></code> provides interfacing for the vector-based calculations.</p>
+<table border="1" class="longtable docutils">
+<colgroup>
+<col width="10%" />
+<col width="90%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td><a class="reference internal" href="_generated/pyhf.tensor.mxnet_backend.mxnet_backend.html#pyhf.tensor.mxnet_backend.mxnet_backend" title="pyhf.tensor.mxnet_backend.mxnet_backend"><code class="xref py py-obj docutils literal notranslate"><span class="pre">mxnet_backend.mxnet_backend</span></code></a></td>
+<td>MXNet backend for pyhf</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="_generated/pyhf.tensor.numpy_backend.numpy_backend.html#pyhf.tensor.numpy_backend.numpy_backend" title="pyhf.tensor.numpy_backend.numpy_backend"><code class="xref py py-obj docutils literal notranslate"><span class="pre">numpy_backend.numpy_backend</span></code></a></td>
+<td>NumPy backend for pyhf</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="_generated/pyhf.tensor.pytorch_backend.pytorch_backend.html#pyhf.tensor.pytorch_backend.pytorch_backend" title="pyhf.tensor.pytorch_backend.pytorch_backend"><code class="xref py py-obj docutils literal notranslate"><span class="pre">pytorch_backend.pytorch_backend</span></code></a></td>
+<td>PyTorch backend for pyhf</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="_generated/pyhf.tensor.tensorflow_backend.tensorflow_backend.html#pyhf.tensor.tensorflow_backend.tensorflow_backend" title="pyhf.tensor.tensorflow_backend.tensorflow_backend"><code class="xref py py-obj docutils literal notranslate"><span class="pre">tensorflow_backend.tensorflow_backend</span></code></a></td>
+<td>TensorFlow backend for pyhf</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="optimizers">
+<h2>Optimizers<a class="headerlink" href="#optimizers" title="Permalink to this headline">¶</a></h2>
+<table border="1" class="longtable docutils">
+<colgroup>
+<col width="10%" />
+<col width="90%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td><a class="reference internal" href="_generated/pyhf.optimize.opt_pytorch.pytorch_optimizer.html#pyhf.optimize.opt_pytorch.pytorch_optimizer" title="pyhf.optimize.opt_pytorch.pytorch_optimizer"><code class="xref py py-obj docutils literal notranslate"><span class="pre">opt_pytorch.pytorch_optimizer</span></code></a></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="_generated/pyhf.optimize.opt_scipy.scipy_optimizer.html#pyhf.optimize.opt_scipy.scipy_optimizer" title="pyhf.optimize.opt_scipy.scipy_optimizer"><code class="xref py py-obj docutils literal notranslate"><span class="pre">opt_scipy.scipy_optimizer</span></code></a></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="_generated/pyhf.optimize.opt_tflow.tflow_optimizer.html#pyhf.optimize.opt_tflow.tflow_optimizer" title="pyhf.optimize.opt_tflow.tflow_optimizer"><code class="xref py py-obj docutils literal notranslate"><span class="pre">opt_tflow.tflow_optimizer</span></code></a></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="_generated/pyhf.optimize.opt_minuit.minuit_optimizer.html#pyhf.optimize.opt_minuit.minuit_optimizer" title="pyhf.optimize.opt_minuit.minuit_optimizer"><code class="xref py py-obj docutils literal notranslate"><span class="pre">opt_minuit.minuit_optimizer</span></code></a></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="modifiers">
+<h2>Modifiers<a class="headerlink" href="#modifiers" title="Permalink to this headline">¶</a></h2>
+<table border="1" class="longtable docutils">
+<colgroup>
+<col width="10%" />
+<col width="90%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td><a class="reference internal" href="_generated/pyhf.modifiers.histosys.html#pyhf.modifiers.histosys" title="pyhf.modifiers.histosys"><code class="xref py py-obj docutils literal notranslate"><span class="pre">histosys</span></code></a></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="_generated/pyhf.modifiers.normfactor.html#pyhf.modifiers.normfactor" title="pyhf.modifiers.normfactor"><code class="xref py py-obj docutils literal notranslate"><span class="pre">normfactor</span></code></a></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="_generated/pyhf.modifiers.normsys.html#pyhf.modifiers.normsys" title="pyhf.modifiers.normsys"><code class="xref py py-obj docutils literal notranslate"><span class="pre">normsys</span></code></a></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="_generated/pyhf.modifiers.shapefactor.html#pyhf.modifiers.shapefactor" title="pyhf.modifiers.shapefactor"><code class="xref py py-obj docutils literal notranslate"><span class="pre">shapefactor</span></code></a></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="_generated/pyhf.modifiers.shapesys.html#pyhf.modifiers.shapesys" title="pyhf.modifiers.shapesys"><code class="xref py py-obj docutils literal notranslate"><span class="pre">shapesys</span></code></a></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="_generated/pyhf.modifiers.staterror.html#pyhf.modifiers.staterror" title="pyhf.modifiers.staterror"><code class="xref py py-obj docutils literal notranslate"><span class="pre">staterror</span></code></a></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="interpolators">
+<h2>Interpolators<a class="headerlink" href="#interpolators" title="Permalink to this headline">¶</a></h2>
+<table border="1" class="longtable docutils">
+<colgroup>
+<col width="10%" />
+<col width="90%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td><a class="reference internal" href="_generated/pyhf.interpolators.code0.html#pyhf.interpolators.code0" title="pyhf.interpolators.code0"><code class="xref py py-obj docutils literal notranslate"><span class="pre">code0</span></code></a></td>
+<td>The piecewise-linear interpolation strategy.</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="_generated/pyhf.interpolators.code1.html#pyhf.interpolators.code1" title="pyhf.interpolators.code1"><code class="xref py py-obj docutils literal notranslate"><span class="pre">code1</span></code></a></td>
+<td>The piecewise-exponential interpolation strategy.</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="_generated/pyhf.interpolators.code2.html#pyhf.interpolators.code2" title="pyhf.interpolators.code2"><code class="xref py py-obj docutils literal notranslate"><span class="pre">code2</span></code></a></td>
+<td>The quadratic interpolation and linear extrapolation strategy.</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="_generated/pyhf.interpolators.code4.html#pyhf.interpolators.code4" title="pyhf.interpolators.code4"><code class="xref py py-obj docutils literal notranslate"><span class="pre">code4</span></code></a></td>
+<td>The polynomial interpolation and exponential extrapolation strategy.</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="exceptions">
+<h2>Exceptions<a class="headerlink" href="#exceptions" title="Permalink to this headline">¶</a></h2>
+<p>Various exceptions, apart from standard python exceptions, that are raised from using the <code class="code docutils literal notranslate"><span class="pre">pyhf</span></code> API.</p>
+<table border="1" class="longtable docutils">
+<colgroup>
+<col width="10%" />
+<col width="90%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td><a class="reference internal" href="_generated/pyhf.exceptions.InvalidInterpCode.html#pyhf.exceptions.InvalidInterpCode" title="pyhf.exceptions.InvalidInterpCode"><code class="xref py py-obj docutils literal notranslate"><span class="pre">InvalidInterpCode</span></code></a></td>
+<td>InvalidInterpCode is raised when an invalid/unimplemented interpolation code is requested.</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="_generated/pyhf.exceptions.InvalidModifier.html#pyhf.exceptions.InvalidModifier" title="pyhf.exceptions.InvalidModifier"><code class="xref py py-obj docutils literal notranslate"><span class="pre">InvalidModifier</span></code></a></td>
+<td>InvalidModifier is raised when an invalid modifier is requested.</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="utilities">
+<h2>Utilities<a class="headerlink" href="#utilities" title="Permalink to this headline">¶</a></h2>
+<table border="1" class="longtable docutils">
+<colgroup>
+<col width="10%" />
+<col width="90%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td><a class="reference internal" href="_generated/pyhf.utils.generate_asimov_data.html#pyhf.utils.generate_asimov_data" title="pyhf.utils.generate_asimov_data"><code class="xref py py-obj docutils literal notranslate"><span class="pre">generate_asimov_data</span></code></a>(asimov_mu,&nbsp;data,&nbsp;pdf,&nbsp;…)</td>
+<td></td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="_generated/pyhf.utils.loglambdav.html#pyhf.utils.loglambdav" title="pyhf.utils.loglambdav"><code class="xref py py-obj docutils literal notranslate"><span class="pre">loglambdav</span></code></a>(pars,&nbsp;data,&nbsp;pdf)</td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="_generated/pyhf.utils.pvals_from_teststat.html#pyhf.utils.pvals_from_teststat" title="pyhf.utils.pvals_from_teststat"><code class="xref py py-obj docutils literal notranslate"><span class="pre">pvals_from_teststat</span></code></a>(sqrtqmu_v,&nbsp;sqrtqmuA_v)</td>
+<td>The <span class="math notranslate nohighlight">\(p\)</span>-values for signal strength <span class="math notranslate nohighlight">\(\mu\)</span> and Asimov strength <span class="math notranslate nohighlight">\(\mu'\)</span> as defined in Equations (59) and (57) of <a href="#id1"><span class="problematic" id="id2">`arXiv:1007.1727`_</span></a></td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="_generated/pyhf.utils.qmu.html#pyhf.utils.qmu" title="pyhf.utils.qmu"><code class="xref py py-obj docutils literal notranslate"><span class="pre">qmu</span></code></a>(mu,&nbsp;data,&nbsp;pdf,&nbsp;init_pars,&nbsp;par_bounds)</td>
+<td>The test statistic, <span class="math notranslate nohighlight">\(q_{\mu}\)</span>, for establishing an upper limit on the strength parameter, <span class="math notranslate nohighlight">\(\mu\)</span>, as defiend in Equation (14) in <a href="#id3"><span class="problematic" id="id4">`arXiv:1007.1727`_</span></a> .</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="_generated/pyhf.utils.hypotest.html#pyhf.utils.hypotest" title="pyhf.utils.hypotest"><code class="xref py py-obj docutils literal notranslate"><span class="pre">hypotest</span></code></a>(poi_test,&nbsp;data,&nbsp;pdf[,&nbsp;init_pars,&nbsp;…])</td>
+<td>Computes <span class="math notranslate nohighlight">\(p\)</span>-values and test statistics for a single value of the parameter of interest</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="_generated/pyhf.default_backend.html" class="btn btn-neutral float-right" title="pyhf.default_backend" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="faq.html" class="btn btn-neutral" title="FAQ" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2018, Lukas Heinrich, Matthew Feickert, Giordon Stark
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script type="text/javascript" src="_static/jquery.js"></script>
+        <script type="text/javascript" src="_static/underscore.js"></script>
+        <script type="text/javascript" src="_static/doctools.js"></script>
+        <script type="text/javascript" src="_static/language_data.js"></script>
+        <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+        <script type="text/x-mathjax-config">MathJax.Hub.Config({"tex2jax": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true, "ignoreClass": "document", "processClass": "math|output_area"}})</script>
+    
+
+  
+
+  <script type="text/javascript" src="_static/js/theme.js"></script>
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

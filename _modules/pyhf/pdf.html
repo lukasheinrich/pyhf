@@ -1,0 +1,664 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>pyhf.pdf &mdash; pyhf 0.0.15 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/github-fork-ribbon-css/0.2.2/gh-fork-ribbon.min.css" type="text/css" />
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+
+  
+  <script src="../../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../../index.html" class="icon icon-home"> pyhf
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.0.15
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../examples.html">Examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../talks.html">Talks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../development.html">Developing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../faq.html">FAQ</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../api.html">API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../citations.html">Use and Citations</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">pyhf</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../index.html">Module code</a> &raquo;</li>
+        
+          <li><a href="../pyhf.html">pyhf</a> &raquo;</li>
+        
+      <li>pyhf.pdf</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for pyhf.pdf</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">copy</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+
+<span class="kn">from</span> <span class="nn">.</span> <span class="k">import</span> <span class="n">get_backend</span><span class="p">,</span> <span class="n">default_backend</span>
+<span class="kn">from</span> <span class="nn">.</span> <span class="k">import</span> <span class="n">exceptions</span>
+<span class="kn">from</span> <span class="nn">.</span> <span class="k">import</span> <span class="n">modifiers</span>
+<span class="kn">from</span> <span class="nn">.</span> <span class="k">import</span> <span class="n">utils</span>
+<span class="kn">from</span> <span class="nn">.constraints</span> <span class="k">import</span> <span class="n">gaussian_constraint_combined</span><span class="p">,</span> <span class="n">poisson_constraint_combined</span>
+<span class="kn">from</span> <span class="nn">.paramsets</span> <span class="k">import</span> <span class="n">reduce_paramsets_requirements</span>
+
+<span class="n">log</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="_ModelConfig"><a class="viewcode-back" href="../../_generated/pyhf.pdf._ModelConfig.html#pyhf.pdf._ModelConfig">[docs]</a><span class="k">class</span> <span class="nc">_ModelConfig</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+<div class="viewcode-block" id="_ModelConfig.__init__"><a class="viewcode-back" href="../../_generated/pyhf.pdf._ModelConfig.html#pyhf.pdf._ModelConfig.__init__">[docs]</a>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">spec</span><span class="p">,</span> <span class="n">poiname</span><span class="o">=</span><span class="s1">&#39;mu&#39;</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">poi_index</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">par_map</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">par_order</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">auxdata</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">auxdata_order</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">next_index</span> <span class="o">=</span> <span class="mi">0</span>
+
+        <span class="c1"># build up a dictionary of the parameter configurations provided by the user</span>
+        <span class="n">_paramsets_user_configs</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">parameter</span> <span class="ow">in</span> <span class="n">spec</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;parameters&#39;</span><span class="p">,</span> <span class="p">[]):</span>
+            <span class="k">if</span> <span class="n">parameter</span><span class="p">[</span><span class="s1">&#39;name&#39;</span><span class="p">]</span> <span class="ow">in</span> <span class="n">_paramsets_user_configs</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">exceptions</span><span class="o">.</span><span class="n">InvalidModel</span><span class="p">(</span>
+                    <span class="s1">&#39;Multiple parameter configurations for </span><span class="si">{}</span><span class="s1"> were found.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                        <span class="n">parameter</span><span class="p">[</span><span class="s1">&#39;name&#39;</span><span class="p">]</span>
+                    <span class="p">)</span>
+                <span class="p">)</span>
+            <span class="n">_paramsets_user_configs</span><span class="p">[</span><span class="n">parameter</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;name&#39;</span><span class="p">)]</span> <span class="o">=</span> <span class="n">parameter</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">channels</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">samples</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">parameters</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">modifiers</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="c1"># keep track of the width of each channel (how many bins)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">channel_nbins</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="c1"># bookkeep all requirements for paramsets we need to build</span>
+        <span class="n">_paramsets_requirements</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="c1"># need to keep track in which order we added the constraints</span>
+        <span class="c1"># so that we can generate correctly-ordered data</span>
+        <span class="k">for</span> <span class="n">channel</span> <span class="ow">in</span> <span class="n">spec</span><span class="p">[</span><span class="s1">&#39;channels&#39;</span><span class="p">]:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">channels</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">channel</span><span class="p">[</span><span class="s1">&#39;name&#39;</span><span class="p">])</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">channel_nbins</span><span class="p">[</span><span class="n">channel</span><span class="p">[</span><span class="s1">&#39;name&#39;</span><span class="p">]]</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">channel</span><span class="p">[</span><span class="s1">&#39;samples&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">][</span><span class="s1">&#39;data&#39;</span><span class="p">])</span>
+            <span class="k">for</span> <span class="n">sample</span> <span class="ow">in</span> <span class="n">channel</span><span class="p">[</span><span class="s1">&#39;samples&#39;</span><span class="p">]:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">samples</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">sample</span><span class="p">[</span><span class="s1">&#39;name&#39;</span><span class="p">])</span>
+                <span class="k">for</span> <span class="n">modifier_def</span> <span class="ow">in</span> <span class="n">sample</span><span class="p">[</span><span class="s1">&#39;modifiers&#39;</span><span class="p">]:</span>
+                    <span class="c1"># get the paramset requirements for the given modifier. If</span>
+                    <span class="c1"># modifier does not exist, we&#39;ll have a KeyError</span>
+                    <span class="n">paramset_name</span> <span class="o">=</span> <span class="n">modifier_def</span><span class="p">[</span><span class="s1">&#39;name&#39;</span><span class="p">]</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">parameters</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">paramset_name</span><span class="p">)</span>
+                    <span class="k">try</span><span class="p">:</span>
+                        <span class="n">paramset_requirements</span> <span class="o">=</span> <span class="n">modifiers</span><span class="o">.</span><span class="n">registry</span><span class="p">[</span>
+                            <span class="n">modifier_def</span><span class="p">[</span><span class="s1">&#39;type&#39;</span><span class="p">]</span>
+                        <span class="p">]</span><span class="o">.</span><span class="n">required_parset</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">sample</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">]))</span>
+                    <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+                        <span class="n">log</span><span class="o">.</span><span class="n">exception</span><span class="p">(</span>
+                            <span class="s1">&#39;Modifier not implemented yet (processing </span><span class="si">{0:s}</span><span class="s1">). Available modifiers: </span><span class="si">{1}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                                <span class="n">modifier_def</span><span class="p">[</span><span class="s1">&#39;type&#39;</span><span class="p">],</span> <span class="n">modifiers</span><span class="o">.</span><span class="n">registry</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span>
+                            <span class="p">)</span>
+                        <span class="p">)</span>
+                        <span class="k">raise</span> <span class="n">exceptions</span><span class="o">.</span><span class="n">InvalidModifier</span><span class="p">()</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">modifiers</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                        <span class="p">(</span>
+                            <span class="n">modifier_def</span><span class="p">[</span><span class="s1">&#39;name&#39;</span><span class="p">],</span>  <span class="c1"># mod name</span>
+                            <span class="n">modifier_def</span><span class="p">[</span><span class="s1">&#39;type&#39;</span><span class="p">],</span>  <span class="c1"># mod type</span>
+                            <span class="n">paramset_name</span><span class="p">,</span>  <span class="c1"># parset name</span>
+                        <span class="p">)</span>
+                    <span class="p">)</span>
+
+                    <span class="c1"># check the shareability (e.g. for shapesys for example)</span>
+                    <span class="n">is_shared</span> <span class="o">=</span> <span class="n">paramset_requirements</span><span class="p">[</span><span class="s1">&#39;is_shared&#39;</span><span class="p">]</span>
+                    <span class="k">if</span> <span class="p">(</span>
+                        <span class="ow">not</span> <span class="p">(</span><span class="n">is_shared</span><span class="p">)</span>
+                        <span class="ow">and</span> <span class="n">modifier_def</span><span class="p">[</span><span class="s1">&#39;name&#39;</span><span class="p">]</span> <span class="ow">in</span> <span class="n">_paramsets_requirements</span>
+                    <span class="p">):</span>
+                        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                            <span class="s2">&quot;Trying to add unshared-paramset but other paramsets exist with the same name.&quot;</span>
+                        <span class="p">)</span>
+                    <span class="k">if</span> <span class="n">is_shared</span> <span class="ow">and</span> <span class="ow">not</span> <span class="p">(</span>
+                        <span class="n">_paramsets_requirements</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+                            <span class="n">modifier_def</span><span class="p">[</span><span class="s1">&#39;name&#39;</span><span class="p">],</span> <span class="p">[{</span><span class="s1">&#39;is_shared&#39;</span><span class="p">:</span> <span class="kc">True</span><span class="p">}]</span>
+                        <span class="p">)[</span><span class="mi">0</span><span class="p">][</span><span class="s1">&#39;is_shared&#39;</span><span class="p">]</span>
+                    <span class="p">):</span>
+                        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                            <span class="s2">&quot;Trying to add shared-paramset but other paramset of same name is indicated to be unshared.&quot;</span>
+                        <span class="p">)</span>
+                    <span class="n">_paramsets_requirements</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="n">modifier_def</span><span class="p">[</span><span class="s1">&#39;name&#39;</span><span class="p">],</span> <span class="p">[])</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                        <span class="n">paramset_requirements</span>
+                    <span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">channels</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">channels</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">samples</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">samples</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">parameters</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">parameters</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">modifiers</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">modifiers</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">channel_nbins</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">channel_nbins</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_create_and_register_paramsets</span><span class="p">(</span>
+            <span class="n">_paramsets_requirements</span><span class="p">,</span> <span class="n">_paramsets_user_configs</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">set_poi</span><span class="p">(</span><span class="n">poiname</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="_ModelConfig.suggested_init"><a class="viewcode-back" href="../../_generated/pyhf.pdf._ModelConfig.html#pyhf.pdf._ModelConfig.suggested_init">[docs]</a>    <span class="k">def</span> <span class="nf">suggested_init</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">init</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">par_order</span><span class="p">:</span>
+            <span class="n">init</span> <span class="o">=</span> <span class="n">init</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">par_map</span><span class="p">[</span><span class="n">name</span><span class="p">][</span><span class="s1">&#39;paramset&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">suggested_init</span>
+        <span class="k">return</span> <span class="n">init</span></div>
+
+<div class="viewcode-block" id="_ModelConfig.suggested_bounds"><a class="viewcode-back" href="../../_generated/pyhf.pdf._ModelConfig.html#pyhf.pdf._ModelConfig.suggested_bounds">[docs]</a>    <span class="k">def</span> <span class="nf">suggested_bounds</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">bounds</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">par_order</span><span class="p">:</span>
+            <span class="n">bounds</span> <span class="o">=</span> <span class="n">bounds</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">par_map</span><span class="p">[</span><span class="n">name</span><span class="p">][</span><span class="s1">&#39;paramset&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">suggested_bounds</span>
+        <span class="k">return</span> <span class="n">bounds</span></div>
+
+<div class="viewcode-block" id="_ModelConfig.par_slice"><a class="viewcode-back" href="../../_generated/pyhf.pdf._ModelConfig.html#pyhf.pdf._ModelConfig.par_slice">[docs]</a>    <span class="k">def</span> <span class="nf">par_slice</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">par_map</span><span class="p">[</span><span class="n">name</span><span class="p">][</span><span class="s1">&#39;slice&#39;</span><span class="p">]</span></div>
+
+<div class="viewcode-block" id="_ModelConfig.param_set"><a class="viewcode-back" href="../../_generated/pyhf.pdf._ModelConfig.html#pyhf.pdf._ModelConfig.param_set">[docs]</a>    <span class="k">def</span> <span class="nf">param_set</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">par_map</span><span class="p">[</span><span class="n">name</span><span class="p">][</span><span class="s1">&#39;paramset&#39;</span><span class="p">]</span></div>
+
+<div class="viewcode-block" id="_ModelConfig.set_poi"><a class="viewcode-back" href="../../_generated/pyhf.pdf._ModelConfig.html#pyhf.pdf._ModelConfig.set_poi">[docs]</a>    <span class="k">def</span> <span class="nf">set_poi</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">[</span><span class="n">x</span> <span class="k">for</span> <span class="n">x</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">modifiers</span><span class="p">]:</span>
+            <span class="k">raise</span> <span class="n">exceptions</span><span class="o">.</span><span class="n">InvalidModel</span><span class="p">(</span>
+                <span class="s2">&quot;The parameter of interest &#39;</span><span class="si">{0:s}</span><span class="s2">&#39; cannot be fit as it is not declared in the model specification.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                    <span class="n">name</span>
+                <span class="p">)</span>
+            <span class="p">)</span>
+        <span class="n">s</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">par_slice</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">s</span><span class="o">.</span><span class="n">stop</span> <span class="o">-</span> <span class="n">s</span><span class="o">.</span><span class="n">start</span> <span class="o">==</span> <span class="mi">1</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">poi_index</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">start</span></div>
+
+    <span class="k">def</span> <span class="nf">_register_paramset</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">param_name</span><span class="p">,</span> <span class="n">paramset</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;allocates n nuisance parameters and stores paramset &gt; modifier map&#39;&#39;&#39;</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+            <span class="s1">&#39;adding modifier </span><span class="si">%s</span><span class="s1"> (</span><span class="si">%s</span><span class="s1"> new nuisance parameters)&#39;</span><span class="p">,</span>
+            <span class="n">param_name</span><span class="p">,</span>
+            <span class="n">paramset</span><span class="o">.</span><span class="n">n_parameters</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="n">sl</span> <span class="o">=</span> <span class="nb">slice</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">next_index</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">next_index</span> <span class="o">+</span> <span class="n">paramset</span><span class="o">.</span><span class="n">n_parameters</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">next_index</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">next_index</span> <span class="o">+</span> <span class="n">paramset</span><span class="o">.</span><span class="n">n_parameters</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">par_order</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">param_name</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">par_map</span><span class="p">[</span><span class="n">param_name</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;slice&#39;</span><span class="p">:</span> <span class="n">sl</span><span class="p">,</span> <span class="s1">&#39;paramset&#39;</span><span class="p">:</span> <span class="n">paramset</span><span class="p">}</span>
+
+    <span class="k">def</span> <span class="nf">_create_and_register_paramsets</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">paramsets_requirements</span><span class="p">,</span> <span class="n">paramsets_user_configs</span>
+    <span class="p">):</span>
+        <span class="k">for</span> <span class="n">param_name</span><span class="p">,</span> <span class="n">paramset_requirements</span> <span class="ow">in</span> <span class="n">reduce_paramsets_requirements</span><span class="p">(</span>
+            <span class="n">paramsets_requirements</span><span class="p">,</span> <span class="n">paramsets_user_configs</span>
+        <span class="p">)</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">paramset_type</span> <span class="o">=</span> <span class="n">paramset_requirements</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;paramset_type&#39;</span><span class="p">)</span>
+            <span class="n">paramset</span> <span class="o">=</span> <span class="n">paramset_type</span><span class="p">(</span><span class="o">**</span><span class="n">paramset_requirements</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_register_paramset</span><span class="p">(</span><span class="n">param_name</span><span class="p">,</span> <span class="n">paramset</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Model"><a class="viewcode-back" href="../../_generated/pyhf.pdf.Model.html#pyhf.pdf.Model">[docs]</a><span class="k">class</span> <span class="nc">Model</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+<div class="viewcode-block" id="Model.__init__"><a class="viewcode-back" href="../../_generated/pyhf.pdf.Model.html#pyhf.pdf.Model.__init__">[docs]</a>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">spec</span><span class="p">,</span> <span class="o">**</span><span class="n">config_kwargs</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">spec</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="n">spec</span><span class="p">)</span>  <span class="c1"># may get modified by config</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">schema</span> <span class="o">=</span> <span class="n">config_kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;schema&#39;</span><span class="p">,</span> <span class="n">utils</span><span class="o">.</span><span class="n">get_default_schema</span><span class="p">())</span>
+        <span class="c1"># run jsonschema validation of input specification against the (provided) schema</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Validating spec against schema: </span><span class="si">{0:s}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">schema</span><span class="p">))</span>
+        <span class="n">utils</span><span class="o">.</span><span class="n">validate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">spec</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">schema</span><span class="p">)</span>
+        <span class="c1"># build up our representation of the specification</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">config</span> <span class="o">=</span> <span class="n">_ModelConfig</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">spec</span><span class="p">,</span> <span class="o">**</span><span class="n">config_kwargs</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_create_nominal_and_modifiers</span><span class="p">()</span>
+
+        <span class="c1"># this is tricky, must happen before constraint</span>
+        <span class="c1"># terms try to access auxdata but after</span>
+        <span class="c1"># combined mods have been created that</span>
+        <span class="c1"># set the aux data</span>
+        <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">par_map</span><span class="o">.</span><span class="n">keys</span><span class="p">()):</span>
+            <span class="n">parset</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">param_set</span><span class="p">(</span><span class="n">k</span><span class="p">)</span>
+            <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">parset</span><span class="p">,</span> <span class="s1">&#39;pdf_type&#39;</span><span class="p">):</span>  <span class="c1"># is constrained</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">auxdata</span> <span class="o">+=</span> <span class="n">parset</span><span class="o">.</span><span class="n">auxdata</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">auxdata_order</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">k</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">constraints_gaussian</span> <span class="o">=</span> <span class="n">gaussian_constraint_combined</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">constraints_poisson</span> <span class="o">=</span> <span class="n">poisson_constraint_combined</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_factor_mods</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="n">modtype</span>
+            <span class="k">for</span> <span class="n">modtype</span><span class="p">,</span> <span class="n">mod</span> <span class="ow">in</span> <span class="n">modifiers</span><span class="o">.</span><span class="n">uncombined</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">mod</span><span class="o">.</span><span class="n">op_code</span> <span class="o">==</span> <span class="s1">&#39;multiplication&#39;</span>
+        <span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_delta_mods</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="n">modtype</span>
+            <span class="k">for</span> <span class="n">modtype</span><span class="p">,</span> <span class="n">mod</span> <span class="ow">in</span> <span class="n">modifiers</span><span class="o">.</span><span class="n">uncombined</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">mod</span><span class="o">.</span><span class="n">op_code</span> <span class="o">==</span> <span class="s1">&#39;addition&#39;</span>
+        <span class="p">]</span></div>
+
+    <span class="k">def</span> <span class="nf">_create_nominal_and_modifiers</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">default_data_makers</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s1">&#39;histosys&#39;</span><span class="p">:</span> <span class="k">lambda</span><span class="p">:</span> <span class="p">{</span>
+                <span class="s1">&#39;hi_data&#39;</span><span class="p">:</span> <span class="p">[],</span>
+                <span class="s1">&#39;lo_data&#39;</span><span class="p">:</span> <span class="p">[],</span>
+                <span class="s1">&#39;nom_data&#39;</span><span class="p">:</span> <span class="p">[],</span>
+                <span class="s1">&#39;mask&#39;</span><span class="p">:</span> <span class="p">[],</span>
+            <span class="p">},</span>
+            <span class="s1">&#39;lumi&#39;</span><span class="p">:</span> <span class="k">lambda</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;mask&#39;</span><span class="p">:</span> <span class="p">[]},</span>
+            <span class="s1">&#39;normsys&#39;</span><span class="p">:</span> <span class="k">lambda</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;hi&#39;</span><span class="p">:</span> <span class="p">[],</span> <span class="s1">&#39;lo&#39;</span><span class="p">:</span> <span class="p">[],</span> <span class="s1">&#39;nom_data&#39;</span><span class="p">:</span> <span class="p">[],</span> <span class="s1">&#39;mask&#39;</span><span class="p">:</span> <span class="p">[]},</span>
+            <span class="s1">&#39;normfactor&#39;</span><span class="p">:</span> <span class="k">lambda</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;mask&#39;</span><span class="p">:</span> <span class="p">[]},</span>
+            <span class="s1">&#39;shapefactor&#39;</span><span class="p">:</span> <span class="k">lambda</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;mask&#39;</span><span class="p">:</span> <span class="p">[]},</span>
+            <span class="s1">&#39;shapesys&#39;</span><span class="p">:</span> <span class="k">lambda</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;mask&#39;</span><span class="p">:</span> <span class="p">[],</span> <span class="s1">&#39;uncrt&#39;</span><span class="p">:</span> <span class="p">[],</span> <span class="s1">&#39;nom_data&#39;</span><span class="p">:</span> <span class="p">[]},</span>
+            <span class="s1">&#39;staterror&#39;</span><span class="p">:</span> <span class="k">lambda</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;mask&#39;</span><span class="p">:</span> <span class="p">[],</span> <span class="s1">&#39;uncrt&#39;</span><span class="p">:</span> <span class="p">[],</span> <span class="s1">&#39;nom_data&#39;</span><span class="p">:</span> <span class="p">[]},</span>
+        <span class="p">}</span>
+
+        <span class="c1"># the mega-channel will consist of mega-samples that subscribe to</span>
+        <span class="c1"># mega-modifiers. i.e. while in normal histfactory, each sample might</span>
+        <span class="c1"># be affected by some modifiers and some not, here we change it so that</span>
+        <span class="c1"># samples are affected by all modifiers, but we set up the modifier</span>
+        <span class="c1"># data such that the application of the modifier does not actually</span>
+        <span class="c1"># change the bin value for bins that are not originally affected by</span>
+        <span class="c1"># that modifier</span>
+        <span class="c1">#</span>
+        <span class="c1"># We don&#39;t actually set up the modifier data here for no-ops, but we do</span>
+        <span class="c1"># set up the entire structure</span>
+        <span class="n">mega_mods</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">m</span><span class="p">,</span> <span class="n">mtype</span><span class="p">,</span> <span class="n">_</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">modifiers</span><span class="p">:</span>
+            <span class="n">key</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="si">{}</span><span class="s1">/</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">mtype</span><span class="p">,</span> <span class="n">m</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">samples</span><span class="p">:</span>
+                <span class="n">mega_mods</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="p">{})[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
+                    <span class="s1">&#39;type&#39;</span><span class="p">:</span> <span class="n">mtype</span><span class="p">,</span>
+                    <span class="s1">&#39;name&#39;</span><span class="p">:</span> <span class="n">m</span><span class="p">,</span>
+                    <span class="s1">&#39;data&#39;</span><span class="p">:</span> <span class="n">default_data_makers</span><span class="p">[</span><span class="n">mtype</span><span class="p">](),</span>
+                <span class="p">}</span>
+
+        <span class="c1"># helper maps channel-name/sample-name to pairs of channel-sample structs</span>
+        <span class="n">helper</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">spec</span><span class="p">[</span><span class="s1">&#39;channels&#39;</span><span class="p">]:</span>
+            <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">c</span><span class="p">[</span><span class="s1">&#39;samples&#39;</span><span class="p">]:</span>
+                <span class="n">helper</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="n">c</span><span class="p">[</span><span class="s1">&#39;name&#39;</span><span class="p">],</span> <span class="p">{})[</span><span class="n">s</span><span class="p">[</span><span class="s1">&#39;name&#39;</span><span class="p">]]</span> <span class="o">=</span> <span class="p">(</span><span class="n">c</span><span class="p">,</span> <span class="n">s</span><span class="p">)</span>
+
+        <span class="n">mega_samples</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">samples</span><span class="p">:</span>
+            <span class="n">mega_nom</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">channels</span><span class="p">:</span>
+                <span class="n">defined_samp</span> <span class="o">=</span> <span class="n">helper</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">c</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">s</span><span class="p">)</span>
+                <span class="n">defined_samp</span> <span class="o">=</span> <span class="kc">None</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">defined_samp</span> <span class="k">else</span> <span class="n">defined_samp</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+                <span class="c1"># set nominal to 0 for channel/sample if the pair doesn&#39;t exist</span>
+                <span class="n">nom</span> <span class="o">=</span> <span class="p">(</span>
+                    <span class="n">defined_samp</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">]</span>
+                    <span class="k">if</span> <span class="n">defined_samp</span>
+                    <span class="k">else</span> <span class="p">[</span><span class="mf">0.0</span><span class="p">]</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">channel_nbins</span><span class="p">[</span><span class="n">c</span><span class="p">]</span>
+                <span class="p">)</span>
+                <span class="n">mega_nom</span> <span class="o">+=</span> <span class="n">nom</span>
+                <span class="n">defined_mods</span> <span class="o">=</span> <span class="p">(</span>
+                    <span class="p">{</span>
+                        <span class="s1">&#39;</span><span class="si">{}</span><span class="s1">/</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="s1">&#39;type&#39;</span><span class="p">],</span> <span class="n">x</span><span class="p">[</span><span class="s1">&#39;name&#39;</span><span class="p">]):</span> <span class="n">x</span>
+                        <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">defined_samp</span><span class="p">[</span><span class="s1">&#39;modifiers&#39;</span><span class="p">]</span>
+                    <span class="p">}</span>
+                    <span class="k">if</span> <span class="n">defined_samp</span>
+                    <span class="k">else</span> <span class="p">{}</span>
+                <span class="p">)</span>
+                <span class="k">for</span> <span class="n">m</span><span class="p">,</span> <span class="n">mtype</span><span class="p">,</span> <span class="n">_</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">modifiers</span><span class="p">:</span>
+                    <span class="n">key</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="si">{}</span><span class="s1">/</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">mtype</span><span class="p">,</span> <span class="n">m</span><span class="p">)</span>
+                    <span class="c1"># this is None if modifier doesn&#39;t affect channel/sample.</span>
+                    <span class="n">thismod</span> <span class="o">=</span> <span class="n">defined_mods</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
+                    <span class="c1"># print(&#39;key&#39;,key,thismod[&#39;data&#39;] if thismod else None)</span>
+                    <span class="k">if</span> <span class="n">mtype</span> <span class="o">==</span> <span class="s1">&#39;histosys&#39;</span><span class="p">:</span>
+                        <span class="n">lo_data</span> <span class="o">=</span> <span class="n">thismod</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">][</span><span class="s1">&#39;lo_data&#39;</span><span class="p">]</span> <span class="k">if</span> <span class="n">thismod</span> <span class="k">else</span> <span class="n">nom</span>
+                        <span class="n">hi_data</span> <span class="o">=</span> <span class="n">thismod</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">][</span><span class="s1">&#39;hi_data&#39;</span><span class="p">]</span> <span class="k">if</span> <span class="n">thismod</span> <span class="k">else</span> <span class="n">nom</span>
+                        <span class="n">maskval</span> <span class="o">=</span> <span class="kc">True</span> <span class="k">if</span> <span class="n">thismod</span> <span class="k">else</span> <span class="kc">False</span>
+                        <span class="n">mega_mods</span><span class="p">[</span><span class="n">s</span><span class="p">][</span><span class="n">key</span><span class="p">][</span><span class="s1">&#39;data&#39;</span><span class="p">][</span><span class="s1">&#39;lo_data&#39;</span><span class="p">]</span> <span class="o">+=</span> <span class="n">lo_data</span>
+                        <span class="n">mega_mods</span><span class="p">[</span><span class="n">s</span><span class="p">][</span><span class="n">key</span><span class="p">][</span><span class="s1">&#39;data&#39;</span><span class="p">][</span><span class="s1">&#39;hi_data&#39;</span><span class="p">]</span> <span class="o">+=</span> <span class="n">hi_data</span>
+                        <span class="n">mega_mods</span><span class="p">[</span><span class="n">s</span><span class="p">][</span><span class="n">key</span><span class="p">][</span><span class="s1">&#39;data&#39;</span><span class="p">][</span><span class="s1">&#39;nom_data&#39;</span><span class="p">]</span> <span class="o">+=</span> <span class="n">nom</span>
+                        <span class="n">mega_mods</span><span class="p">[</span><span class="n">s</span><span class="p">][</span><span class="n">key</span><span class="p">][</span><span class="s1">&#39;data&#39;</span><span class="p">][</span><span class="s1">&#39;mask&#39;</span><span class="p">]</span> <span class="o">+=</span> <span class="p">[</span><span class="n">maskval</span><span class="p">]</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span>
+                            <span class="n">nom</span>
+                        <span class="p">)</span>  <span class="c1"># broadcasting</span>
+                        <span class="k">pass</span>
+                    <span class="k">elif</span> <span class="n">mtype</span> <span class="o">==</span> <span class="s1">&#39;normsys&#39;</span><span class="p">:</span>
+                        <span class="n">maskval</span> <span class="o">=</span> <span class="kc">True</span> <span class="k">if</span> <span class="n">thismod</span> <span class="k">else</span> <span class="kc">False</span>
+                        <span class="n">lo_factor</span> <span class="o">=</span> <span class="n">thismod</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">][</span><span class="s1">&#39;lo&#39;</span><span class="p">]</span> <span class="k">if</span> <span class="n">thismod</span> <span class="k">else</span> <span class="mf">1.0</span>
+                        <span class="n">hi_factor</span> <span class="o">=</span> <span class="n">thismod</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">][</span><span class="s1">&#39;hi&#39;</span><span class="p">]</span> <span class="k">if</span> <span class="n">thismod</span> <span class="k">else</span> <span class="mf">1.0</span>
+                        <span class="n">mega_mods</span><span class="p">[</span><span class="n">s</span><span class="p">][</span><span class="n">key</span><span class="p">][</span><span class="s1">&#39;data&#39;</span><span class="p">][</span><span class="s1">&#39;nom_data&#39;</span><span class="p">]</span> <span class="o">+=</span> <span class="p">[</span><span class="mf">1.0</span><span class="p">]</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">nom</span><span class="p">)</span>
+                        <span class="n">mega_mods</span><span class="p">[</span><span class="n">s</span><span class="p">][</span><span class="n">key</span><span class="p">][</span><span class="s1">&#39;data&#39;</span><span class="p">][</span><span class="s1">&#39;lo&#39;</span><span class="p">]</span> <span class="o">+=</span> <span class="p">[</span><span class="n">lo_factor</span><span class="p">]</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span>
+                            <span class="n">nom</span>
+                        <span class="p">)</span>  <span class="c1"># broadcasting</span>
+                        <span class="n">mega_mods</span><span class="p">[</span><span class="n">s</span><span class="p">][</span><span class="n">key</span><span class="p">][</span><span class="s1">&#39;data&#39;</span><span class="p">][</span><span class="s1">&#39;hi&#39;</span><span class="p">]</span> <span class="o">+=</span> <span class="p">[</span><span class="n">hi_factor</span><span class="p">]</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">nom</span><span class="p">)</span>
+                        <span class="n">mega_mods</span><span class="p">[</span><span class="n">s</span><span class="p">][</span><span class="n">key</span><span class="p">][</span><span class="s1">&#39;data&#39;</span><span class="p">][</span><span class="s1">&#39;mask&#39;</span><span class="p">]</span> <span class="o">+=</span> <span class="p">[</span><span class="n">maskval</span><span class="p">]</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span>
+                            <span class="n">nom</span>
+                        <span class="p">)</span>  <span class="c1"># broadcasting</span>
+                    <span class="k">elif</span> <span class="n">mtype</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;normfactor&#39;</span><span class="p">,</span> <span class="s1">&#39;shapefactor&#39;</span><span class="p">,</span> <span class="s1">&#39;lumi&#39;</span><span class="p">]:</span>
+                        <span class="n">maskval</span> <span class="o">=</span> <span class="kc">True</span> <span class="k">if</span> <span class="n">thismod</span> <span class="k">else</span> <span class="kc">False</span>
+                        <span class="n">mega_mods</span><span class="p">[</span><span class="n">s</span><span class="p">][</span><span class="n">key</span><span class="p">][</span><span class="s1">&#39;data&#39;</span><span class="p">][</span><span class="s1">&#39;mask&#39;</span><span class="p">]</span> <span class="o">+=</span> <span class="p">[</span><span class="n">maskval</span><span class="p">]</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span>
+                            <span class="n">nom</span>
+                        <span class="p">)</span>  <span class="c1"># broadcasting</span>
+                    <span class="k">elif</span> <span class="n">mtype</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;shapesys&#39;</span><span class="p">,</span> <span class="s1">&#39;staterror&#39;</span><span class="p">]:</span>
+                        <span class="n">uncrt</span> <span class="o">=</span> <span class="n">thismod</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">]</span> <span class="k">if</span> <span class="n">thismod</span> <span class="k">else</span> <span class="p">[</span><span class="mf">0.0</span><span class="p">]</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">nom</span><span class="p">)</span>
+                        <span class="n">maskval</span> <span class="o">=</span> <span class="p">[</span><span class="kc">True</span> <span class="k">if</span> <span class="n">thismod</span> <span class="k">else</span> <span class="kc">False</span><span class="p">]</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">nom</span><span class="p">)</span>
+                        <span class="n">mega_mods</span><span class="p">[</span><span class="n">s</span><span class="p">][</span><span class="n">key</span><span class="p">][</span><span class="s1">&#39;data&#39;</span><span class="p">][</span><span class="s1">&#39;mask&#39;</span><span class="p">]</span> <span class="o">+=</span> <span class="n">maskval</span>
+                        <span class="n">mega_mods</span><span class="p">[</span><span class="n">s</span><span class="p">][</span><span class="n">key</span><span class="p">][</span><span class="s1">&#39;data&#39;</span><span class="p">][</span><span class="s1">&#39;uncrt&#39;</span><span class="p">]</span> <span class="o">+=</span> <span class="n">uncrt</span>
+                        <span class="n">mega_mods</span><span class="p">[</span><span class="n">s</span><span class="p">][</span><span class="n">key</span><span class="p">][</span><span class="s1">&#39;data&#39;</span><span class="p">][</span><span class="s1">&#39;nom_data&#39;</span><span class="p">]</span> <span class="o">+=</span> <span class="n">nom</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
+                            <span class="s1">&#39;not sure how to combine </span><span class="si">{mtype}</span><span class="s1"> into the mega-channel&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                                <span class="n">mtype</span><span class="o">=</span><span class="n">mtype</span>
+                            <span class="p">)</span>
+                        <span class="p">)</span>
+            <span class="n">sample_dict</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="s1">&#39;name&#39;</span><span class="p">:</span> <span class="s1">&#39;mega_</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">s</span><span class="p">),</span>
+                <span class="s1">&#39;nom&#39;</span><span class="p">:</span> <span class="n">mega_nom</span><span class="p">,</span>
+                <span class="s1">&#39;modifiers&#39;</span><span class="p">:</span> <span class="nb">list</span><span class="p">(</span><span class="n">mega_mods</span><span class="p">[</span><span class="n">s</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">()),</span>
+            <span class="p">}</span>
+            <span class="n">mega_samples</span><span class="p">[</span><span class="n">s</span><span class="p">]</span> <span class="o">=</span> <span class="n">sample_dict</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">mega_mods</span> <span class="o">=</span> <span class="n">mega_mods</span>
+
+        <span class="n">tensorlib</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">get_backend</span><span class="p">()</span>
+        <span class="n">thenom</span> <span class="o">=</span> <span class="n">default_backend</span><span class="o">.</span><span class="n">astensor</span><span class="p">(</span>
+            <span class="p">[</span><span class="n">mega_samples</span><span class="p">[</span><span class="n">s</span><span class="p">][</span><span class="s1">&#39;nom&#39;</span><span class="p">]</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">samples</span><span class="p">]</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">thenom</span> <span class="o">=</span> <span class="n">default_backend</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span>
+            <span class="n">thenom</span><span class="p">,</span>
+            <span class="p">(</span>
+                <span class="mi">1</span><span class="p">,</span>
+                <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">samples</span><span class="p">),</span>
+                <span class="mi">1</span><span class="p">,</span>
+                <span class="nb">sum</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">channel_nbins</span><span class="o">.</span><span class="n">values</span><span class="p">())),</span>
+            <span class="p">),</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">modifiers_appliers</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="n">k</span><span class="p">:</span> <span class="n">c</span><span class="p">(</span>
+                <span class="p">[</span><span class="n">x</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">modifiers</span> <span class="k">if</span> <span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="n">k</span><span class="p">],</span>  <span class="c1"># x[1] is mtype</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">,</span>
+                <span class="n">mega_mods</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">modifiers</span><span class="o">.</span><span class="n">combined</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+        <span class="p">}</span>
+
+<div class="viewcode-block" id="Model.expected_auxdata"><a class="viewcode-back" href="../../_generated/pyhf.pdf.Model.html#pyhf.pdf.Model.expected_auxdata">[docs]</a>    <span class="k">def</span> <span class="nf">expected_auxdata</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pars</span><span class="p">):</span>
+        <span class="n">tensorlib</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">get_backend</span><span class="p">()</span>
+        <span class="n">auxdata</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">for</span> <span class="n">parname</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">auxdata_order</span><span class="p">:</span>
+            <span class="c1"># order matters! because we generated auxdata in a certain order</span>
+            <span class="n">thisaux</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">param_set</span><span class="p">(</span><span class="n">parname</span><span class="p">)</span><span class="o">.</span><span class="n">expected_data</span><span class="p">(</span>
+                <span class="n">pars</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">par_slice</span><span class="p">(</span><span class="n">parname</span><span class="p">)]</span>
+            <span class="p">)</span>
+            <span class="n">tocat</span> <span class="o">=</span> <span class="p">[</span><span class="n">thisaux</span><span class="p">]</span> <span class="k">if</span> <span class="n">auxdata</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="p">[</span><span class="n">auxdata</span><span class="p">,</span> <span class="n">thisaux</span><span class="p">]</span>
+            <span class="n">auxdata</span> <span class="o">=</span> <span class="n">tensorlib</span><span class="o">.</span><span class="n">concatenate</span><span class="p">(</span><span class="n">tocat</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">auxdata</span></div>
+
+    <span class="k">def</span> <span class="nf">_modifications</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pars</span><span class="p">):</span>
+        <span class="n">deltas</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span>
+            <span class="nb">filter</span><span class="p">(</span>
+                <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">,</span>
+                <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">modifiers_appliers</span><span class="p">[</span><span class="n">k</span><span class="p">]</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="n">pars</span><span class="p">)</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_delta_mods</span><span class="p">],</span>
+            <span class="p">)</span>
+        <span class="p">)</span>
+        <span class="n">factors</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span>
+            <span class="nb">filter</span><span class="p">(</span>
+                <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">,</span>
+                <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">modifiers_appliers</span><span class="p">[</span><span class="n">k</span><span class="p">]</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="n">pars</span><span class="p">)</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_factor_mods</span><span class="p">],</span>
+            <span class="p">)</span>
+        <span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">deltas</span><span class="p">,</span> <span class="n">factors</span>
+
+<div class="viewcode-block" id="Model.expected_actualdata"><a class="viewcode-back" href="../../_generated/pyhf.pdf.Model.html#pyhf.pdf.Model.expected_actualdata">[docs]</a>    <span class="k">def</span> <span class="nf">expected_actualdata</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pars</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        For a single channel single sample, we compute</span>
+
+<span class="sd">            Pois(d | fac(pars) * (delta(pars) + nom) ) * Gaus(a | pars[is_gaus], sigmas) * Pois(a * cfac | pars[is_poi] * cfac)</span>
+
+<span class="sd">        where:</span>
+<span class="sd">            - delta(pars) is the result of an apply(pars) of combined modifiers</span>
+<span class="sd">              with &#39;addition&#39; op_code</span>
+<span class="sd">            - factor(pars) is the result of apply(pars) of combined modifiers</span>
+<span class="sd">              with &#39;multiplication&#39; op_code</span>
+<span class="sd">            - pars[is_gaus] are the subset of parameters that are constrained by</span>
+<span class="sd">              gauss (with sigmas accordingly, some of which are computed by</span>
+<span class="sd">              modifiers)</span>
+<span class="sd">            - pars[is_pois] are the poissons and their rates (they come with</span>
+<span class="sd">              their own additional factors unrelated to factor(pars) which are</span>
+<span class="sd">              also computed by the finalize() of the modifier)</span>
+
+<span class="sd">        So in the end we only make 3 calls to pdfs</span>
+
+<span class="sd">            1. The main pdf of data and modified rates</span>
+<span class="sd">            2. All Gaussian constraint as one call</span>
+<span class="sd">            3. All Poisson constraints as one call</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">tensorlib</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">get_backend</span><span class="p">()</span>
+        <span class="n">pars</span> <span class="o">=</span> <span class="n">tensorlib</span><span class="o">.</span><span class="n">astensor</span><span class="p">(</span><span class="n">pars</span><span class="p">)</span>
+
+        <span class="n">deltas</span><span class="p">,</span> <span class="n">factors</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_modifications</span><span class="p">(</span><span class="n">pars</span><span class="p">)</span>
+
+        <span class="n">allsum</span> <span class="o">=</span> <span class="n">tensorlib</span><span class="o">.</span><span class="n">concatenate</span><span class="p">(</span><span class="n">deltas</span> <span class="o">+</span> <span class="p">[</span><span class="n">tensorlib</span><span class="o">.</span><span class="n">astensor</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">thenom</span><span class="p">)])</span>
+
+        <span class="n">nom_plus_delta</span> <span class="o">=</span> <span class="n">tensorlib</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">allsum</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="n">nom_plus_delta</span> <span class="o">=</span> <span class="n">tensorlib</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span>
+            <span class="n">nom_plus_delta</span><span class="p">,</span> <span class="p">(</span><span class="mi">1</span><span class="p">,)</span> <span class="o">+</span> <span class="n">tensorlib</span><span class="o">.</span><span class="n">shape</span><span class="p">(</span><span class="n">nom_plus_delta</span><span class="p">)</span>
+        <span class="p">)</span>
+
+        <span class="n">allfac</span> <span class="o">=</span> <span class="n">tensorlib</span><span class="o">.</span><span class="n">concatenate</span><span class="p">(</span><span class="n">factors</span> <span class="o">+</span> <span class="p">[</span><span class="n">nom_plus_delta</span><span class="p">])</span>
+
+        <span class="n">newbysample</span> <span class="o">=</span> <span class="n">tensorlib</span><span class="o">.</span><span class="n">product</span><span class="p">(</span><span class="n">allfac</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="n">newresults</span> <span class="o">=</span> <span class="n">tensorlib</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">newbysample</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">newresults</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>  <span class="c1"># only one alphas</span></div>
+
+<div class="viewcode-block" id="Model.expected_data"><a class="viewcode-back" href="../../_generated/pyhf.pdf.Model.html#pyhf.pdf.Model.expected_data">[docs]</a>    <span class="k">def</span> <span class="nf">expected_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pars</span><span class="p">,</span> <span class="n">include_auxdata</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+        <span class="n">tensorlib</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">get_backend</span><span class="p">()</span>
+        <span class="n">pars</span> <span class="o">=</span> <span class="n">tensorlib</span><span class="o">.</span><span class="n">astensor</span><span class="p">(</span><span class="n">pars</span><span class="p">)</span>
+        <span class="n">expected_actual</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">expected_actualdata</span><span class="p">(</span><span class="n">pars</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">include_auxdata</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">expected_actual</span>
+        <span class="n">expected_constraints</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">expected_auxdata</span><span class="p">(</span><span class="n">pars</span><span class="p">)</span>
+        <span class="n">tocat</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="p">[</span><span class="n">expected_actual</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">expected_constraints</span> <span class="ow">is</span> <span class="kc">None</span>
+            <span class="k">else</span> <span class="p">[</span><span class="n">expected_actual</span><span class="p">,</span> <span class="n">expected_constraints</span><span class="p">]</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="n">tensorlib</span><span class="o">.</span><span class="n">concatenate</span><span class="p">(</span><span class="n">tocat</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Model.constraint_logpdf"><a class="viewcode-back" href="../../_generated/pyhf.pdf.Model.html#pyhf.pdf.Model.constraint_logpdf">[docs]</a>    <span class="k">def</span> <span class="nf">constraint_logpdf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">auxdata</span><span class="p">,</span> <span class="n">pars</span><span class="p">):</span>
+        <span class="n">normal</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">constraints_gaussian</span><span class="o">.</span><span class="n">logpdf</span><span class="p">(</span><span class="n">auxdata</span><span class="p">,</span> <span class="n">pars</span><span class="p">)</span>
+        <span class="n">poisson</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">constraints_poisson</span><span class="o">.</span><span class="n">logpdf</span><span class="p">(</span><span class="n">auxdata</span><span class="p">,</span> <span class="n">pars</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">normal</span> <span class="o">+</span> <span class="n">poisson</span></div>
+
+<div class="viewcode-block" id="Model.mainlogpdf"><a class="viewcode-back" href="../../_generated/pyhf.pdf.Model.html#pyhf.pdf.Model.mainlogpdf">[docs]</a>    <span class="k">def</span> <span class="nf">mainlogpdf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">maindata</span><span class="p">,</span> <span class="n">pars</span><span class="p">):</span>
+        <span class="n">tensorlib</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">get_backend</span><span class="p">()</span>
+        <span class="n">lambdas_data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">expected_actualdata</span><span class="p">(</span><span class="n">pars</span><span class="p">)</span>
+        <span class="n">summands</span> <span class="o">=</span> <span class="n">tensorlib</span><span class="o">.</span><span class="n">poisson_logpdf</span><span class="p">(</span><span class="n">maindata</span><span class="p">,</span> <span class="n">lambdas_data</span><span class="p">)</span>
+        <span class="n">tosum</span> <span class="o">=</span> <span class="n">tensorlib</span><span class="o">.</span><span class="n">boolean_mask</span><span class="p">(</span><span class="n">summands</span><span class="p">,</span> <span class="n">tensorlib</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">summands</span><span class="p">))</span>
+        <span class="n">mainpdf</span> <span class="o">=</span> <span class="n">tensorlib</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">tosum</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">mainpdf</span></div>
+
+<div class="viewcode-block" id="Model.logpdf"><a class="viewcode-back" href="../../_generated/pyhf.pdf.Model.html#pyhf.pdf.Model.logpdf">[docs]</a>    <span class="k">def</span> <span class="nf">logpdf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pars</span><span class="p">,</span> <span class="n">data</span><span class="p">):</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">tensorlib</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">get_backend</span><span class="p">()</span>
+            <span class="n">pars</span><span class="p">,</span> <span class="n">data</span> <span class="o">=</span> <span class="n">tensorlib</span><span class="o">.</span><span class="n">astensor</span><span class="p">(</span><span class="n">pars</span><span class="p">),</span> <span class="n">tensorlib</span><span class="o">.</span><span class="n">astensor</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+            <span class="n">cut</span> <span class="o">=</span> <span class="n">tensorlib</span><span class="o">.</span><span class="n">shape</span><span class="p">(</span><span class="n">data</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">auxdata</span><span class="p">)</span>
+            <span class="n">actual_data</span><span class="p">,</span> <span class="n">aux_data</span> <span class="o">=</span> <span class="n">data</span><span class="p">[:</span><span class="n">cut</span><span class="p">],</span> <span class="n">data</span><span class="p">[</span><span class="n">cut</span><span class="p">:]</span>
+
+            <span class="n">mainpdf</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mainlogpdf</span><span class="p">(</span><span class="n">actual_data</span><span class="p">,</span> <span class="n">pars</span><span class="p">)</span>
+            <span class="n">constraint</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">constraint_logpdf</span><span class="p">(</span><span class="n">aux_data</span><span class="p">,</span> <span class="n">pars</span><span class="p">)</span>
+
+            <span class="n">result</span> <span class="o">=</span> <span class="n">mainpdf</span> <span class="o">+</span> <span class="n">constraint</span>
+            <span class="k">return</span> <span class="n">result</span> <span class="o">*</span> <span class="n">tensorlib</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span>
+                <span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+            <span class="p">)</span>  <span class="c1"># ensure (1,) array shape also for numpy</span>
+        <span class="k">except</span><span class="p">:</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">error</span><span class="p">(</span>
+                <span class="s1">&#39;eval failed for data </span><span class="si">{}</span><span class="s1"> pars: </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                    <span class="n">tensorlib</span><span class="o">.</span><span class="n">tolist</span><span class="p">(</span><span class="n">data</span><span class="p">),</span> <span class="n">tensorlib</span><span class="o">.</span><span class="n">tolist</span><span class="p">(</span><span class="n">pars</span><span class="p">)</span>
+                <span class="p">)</span>
+            <span class="p">)</span>
+            <span class="k">raise</span></div>
+
+<div class="viewcode-block" id="Model.pdf"><a class="viewcode-back" href="../../_generated/pyhf.pdf.Model.html#pyhf.pdf.Model.pdf">[docs]</a>    <span class="k">def</span> <span class="nf">pdf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pars</span><span class="p">,</span> <span class="n">data</span><span class="p">):</span>
+        <span class="n">tensorlib</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">get_backend</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">tensorlib</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">logpdf</span><span class="p">(</span><span class="n">pars</span><span class="p">,</span> <span class="n">data</span><span class="p">))</span></div></div>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2018, Lukas Heinrich, Matthew Feickert, Giordon Stark
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+        <script type="text/javascript" src="../../_static/jquery.js"></script>
+        <script type="text/javascript" src="../../_static/underscore.js"></script>
+        <script type="text/javascript" src="../../_static/doctools.js"></script>
+        <script type="text/javascript" src="../../_static/language_data.js"></script>
+        <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+        <script type="text/x-mathjax-config">MathJax.Hub.Config({"tex2jax": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true, "ignoreClass": "document", "processClass": "math|output_area"}})</script>
+    
+
+  
+
+  <script type="text/javascript" src="../../_static/js/theme.js"></script>
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

@@ -1,0 +1,6 @@
+pyhf.utils.generate\_asimov\_data
+=================================
+
+.. currentmodule:: pyhf.utils
+
+.. autofunction:: generate_asimov_data
